@@ -96,6 +96,22 @@ Leitmotif needs the game's `choreo` binary at runtime — build it once in the g
 repo with `cargo build --bin choreo`, then point `CHOREO_BIN` at it (or put it on
 `PATH`).
 
+### VS Code
+
+Shared commands ship in `.vscode/`. Open the Leitmotif folder in VS Code and:
+
+- **Run Build Task** (`Ctrl+Shift+B`) → **leitmotif: dev (debug)** — builds the
+  `choreo` dependency and launches the app in dev mode (hot-reload UI + debug
+  shell). This is the default build task.
+- **Terminal → Run Task…** also offers: *build release (installer)*, *build
+  frontend*, *build choreo (dependency)*, *run release exe*.
+- **Run and Debug** (`F5`) → **Leitmotif: debug** — step through the Rust shell
+  with LLDB (or the MSVC config). Recommended extensions are suggested via
+  `.vscode/extensions.json`.
+
+Every task sets `CHOREO_BIN` to `../../target/debug/choreo.exe` automatically, so
+the app finds the game's CLI without extra setup.
+
 ## Identity
 
 Leitmotif's icon is a **lantern flame in the fog** — the game's recurring visual

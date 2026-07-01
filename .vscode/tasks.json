@@ -1,0 +1,79 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "leitmotif: build choreo (dependency)",
+      "type": "shell",
+      "command": "cargo build --bin choreo",
+      "options": {
+        "cwd": "${workspaceFolder}/../.."
+      },
+      "problemMatcher": ["$rustc"],
+      "presentation": { "reveal": "silent", "panel": "shared" },
+      "detail": "Build the game's choreo CLI that Leitmotif shells out to at runtime."
+    },
+    {
+      "label": "leitmotif: install deps",
+      "type": "shell",
+      "command": "npm install",
+      "options": { "cwd": "${workspaceFolder}" },
+      "presentation": { "reveal": "silent" },
+      "detail": "npm install for the web frontend."
+    },
+    {
+      "label": "leitmotif: dev (debug)",
+      "type": "shell",
+      "command": "npm run tauri:dev",
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CHOREO_BIN": "${workspaceFolder}/../../target/debug/choreo.exe"
+        }
+      },
+      "dependsOn": ["leitmotif: build choreo (dependency)"],
+      "isBackground": true,
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "detail": "Run Leitmotif in dev mode (hot-reload UI, debug Rust shell). Uses the debug choreo binary."
+    },
+    {
+      "label": "leitmotif: build frontend",
+      "type": "shell",
+      "command": "npm run build",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "detail": "tsc + vite build of the web frontend into dist/."
+    },
+    {
+      "label": "leitmotif: build release (installer)",
+      "type": "shell",
+      "command": "npm run tauri:build",
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CHOREO_BIN": "${workspaceFolder}/../../target/debug/choreo.exe"
+        }
+      },
+      "dependsOn": ["leitmotif: build choreo (dependency)"],
+      "problemMatcher": ["$rustc"],
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "detail": "Build the optimized release exe + NSIS Windows installer (target/release/bundle/nsis)."
+    },
+    {
+      "label": "leitmotif: run release exe",
+      "type": "shell",
+      "command": "${workspaceFolder}/src-tauri/target/release/leitmotif.exe",
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CHOREO_BIN": "${workspaceFolder}/../../target/debug/choreo.exe"
+        }
+      },
+      "problemMatcher": [],
+      "presentation": { "reveal": "always" },
+      "detail": "Launch the already-built release Leitmotif.exe."
+    }
+  ]
+}

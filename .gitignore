@@ -12,8 +12,13 @@ src-tauri/gen/
 .DS_Store
 Thumbs.db
 .idea/
-.vscode/
 *.swp
+
+# VS Code: ignore per-user files but SHIP the shared build/debug commands.
+.vscode/*
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
 
 # (The generated app icon set under src-tauri/icons/ IS tracked — it's the app's
 #  identity, produced from leitmotif-source.svg via `npm run tauri icon`.)
