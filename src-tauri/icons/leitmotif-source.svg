@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Leitmotif app icon — a lantern flame in the fog.
+  The lantern is the game's recurring visual motif (its leitmotif), and a flame
+  reading through cool haze is exactly the app's tone: warm intent, cool air.
+  Gold flame on a deep blue-grey field with a soft glow.
+-->
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="70%">
+      <stop offset="0%" stop-color="#221c2e"/>
+      <stop offset="60%" stop-color="#16121e"/>
+      <stop offset="100%" stop-color="#0f0d15"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="50%" cy="54%" r="40%">
+      <stop offset="0%" stop-color="#d8b268" stop-opacity="0.55"/>
+      <stop offset="55%" stop-color="#d8b268" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#d8b268" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="flame" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#fff2cf"/>
+      <stop offset="42%" stop-color="#f0c979"/>
+      <stop offset="100%" stop-color="#c8863a"/>
+    </linearGradient>
+    <linearGradient id="innerflame" x1="50%" y1="10%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#75f0d6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- rounded field -->
+  <rect x="0" y="0" width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- lantern glow through the haze -->
+  <rect x="0" y="0" width="512" height="512" rx="112" fill="url(#glow)"/>
+
+  <!-- outer flame -->
+  <path d="M256 92
+           C 300 168, 356 196, 356 288
+           C 356 356, 312 404, 256 404
+           C 200 404, 156 356, 156 288
+           C 156 196, 212 168, 256 92 Z"
+        fill="url(#flame)"/>
+
+  <!-- inner flame (teal-white heart — the accent colour, the calm inside the warmth) -->
+  <path d="M256 180
+           C 280 224, 306 244, 306 292
+           C 306 332, 284 360, 256 360
+           C 228 360, 206 332, 206 292
+           C 206 244, 232 224, 256 180 Z"
+        fill="url(#innerflame)" opacity="0.92"/>
+
+  <!-- a faint rising ember, the recurring note -->
+  <circle cx="256" cy="140" r="7" fill="#fff2cf" opacity="0.85"/>
+  <circle cx="292" cy="120" r="4" fill="#d8b268" opacity="0.55"/>
+</svg>

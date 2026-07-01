@@ -15,6 +15,5 @@ Thumbs.db
 .vscode/
 *.swp
 
-# Tauri build artifacts
-src-tauri/icons/*.png
-!src-tauri/icons/.gitkeep
+# (The generated app icon set under src-tauri/icons/ IS tracked — it's the app's
+#  identity, produced from leitmotif-source.svg via `npm run tauri icon`.)

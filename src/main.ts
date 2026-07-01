@@ -67,7 +67,9 @@ function renderSequences(): void {
   if (seqs.length === 0) {
     const li = document.createElement("li");
     li.className = "empty";
-    li.textContent = doc.path ? "This scene has no sequences yet." : "Open a scene to see its sequences.";
+    li.textContent = doc.path
+      ? "This scene has no sequences yet — the stage is yours."
+      : "Open a scene, or start a new one, to begin directing.";
     seqList.appendChild(li);
     return;
   }

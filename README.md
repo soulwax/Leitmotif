@@ -96,6 +96,14 @@ Leitmotif needs the game's `choreo` binary at runtime — build it once in the g
 repo with `cargo build --bin choreo`, then point `CHOREO_BIN` at it (or put it on
 `PATH`).
 
+## Identity
+
+Leitmotif's icon is a **lantern flame in the fog** — the game's recurring visual
+motif, warm gold with a calm teal-white heart. It's authored as
+`src-tauri/icons/leitmotif-source.svg` and generated with `npm run tauri icon`.
+The preview stage carries the same tone: actors glow like lanterns in cool haze,
+so the writer sees a *scene*, not a scatter of dots.
+
 ## Layout
 
 ```

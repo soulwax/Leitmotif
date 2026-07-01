@@ -1,16 +1,17 @@
 # App icons
 
-`icon.ico` here is a **minimal gold placeholder** (a 16×16 solid tile) so
-`tauri-build` can generate its Windows resource file — it is required even for
-`cargo check`/`tauri dev` on Windows, not just release bundles. Replace it with
-real artwork when it exists.
+The app's identity is a **lantern flame in the fog** — the game's recurring visual
+motif (its *leitmotif*), warm gold with a calm teal-white heart against cool haze.
 
-To generate the full icon set from a single source PNG (once you have artwork):
+- **Source:** `leitmotif-source.svg` (edit this).
+- **Generated set:** `icon.ico` / `icon.png` / `icon.icns` and the `Square*Logo`
+  PNGs, produced by Tauri's generator.
+
+Regenerate after editing the SVG:
 
 ```bash
-npm run tauri icon path/to/leitmotif-source.png
+npm run tauri icon src-tauri/icons/leitmotif-source.svg --output src-tauri/icons
 ```
 
-That produces `icon.ico`, `icon.icns`, and the various PNG sizes Tauri expects,
-and updates `tauri.conf.json` automatically. Until then, `tauri dev` works and
-`tauri build` will prompt for the icon.
+(The mobile `android/`/`ios/` trees it also emits are removed — this is a Windows
+desktop app.)
