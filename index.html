@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Leitmotif — EchoWarrior Scene Director</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="titles">
+        <h1>Leitmotif</h1>
+        <p class="tagline">EchoWarrior scene director</p>
+      </div>
+      <div class="toolbar">
+        <button id="btn-new">New</button>
+        <button id="btn-open">Open…</button>
+        <button id="btn-save">Save</button>
+        <button id="btn-save-as">Save As…</button>
+        <span id="doc-name" class="doc-name">— no scene —</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel sequences">
+        <div class="panel-head">
+          <h2>Sequences</h2>
+          <span id="seq-count" class="count"></span>
+        </div>
+        <ul id="sequence-list" class="seq-list">
+          <li class="empty">Open a scene to see its sequences.</li>
+        </ul>
+      </section>
+
+      <section class="panel validation">
+        <div class="panel-head">
+          <h2>Validation</h2>
+          <button id="btn-validate" class="small">Validate</button>
+        </div>
+        <pre id="validation-output" class="output">—</pre>
+      </section>
+    </main>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

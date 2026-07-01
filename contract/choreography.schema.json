@@ -1,0 +1,593 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ChoreographyDef",
+  "description": "Top-level structure of `Assets/Data/choreography.toml`.",
+  "type": "object",
+  "properties": {
+    "gestures": {
+      "description": "Named gesture curves. Authors may override any built-in or add their own;\nentries are merged over the built-in set (`builtin_gestures`).",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/GestureDef"
+      },
+      "default": {}
+    },
+    "schema": {
+      "description": "Schema version for forward-compat warnings (mod_check reads this).",
+      "type": "integer",
+      "format": "uint32",
+      "default": 1,
+      "minimum": 0
+    },
+    "sequence": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/SequenceDef"
+      }
+    }
+  },
+  "$defs": {
+    "BeatDef": {
+      "description": "A single parallel action. `actor` is `\"echo\"`, `\"world\"`, or a character id.",
+      "type": "object",
+      "properties": {
+        "actor": {
+          "type": "string",
+          "default": "echo"
+        },
+        "amount": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "float",
+          "default": null
+        },
+        "direction": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "do": {
+          "description": "The beat verb. See `BeatVerb`.",
+          "type": "string"
+        },
+        "duration": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "float",
+          "default": null
+        },
+        "ease": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "flag": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "from": {
+          "description": "View edge an off-screen `walk_in` enters from: north|south|east|west|nearest.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "kind": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "preset": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "radius": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "float",
+          "default": null
+        },
+        "shake": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "float",
+          "default": null
+        },
+        "speaker": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "speed": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "float",
+          "default": null
+        },
+        "target": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "text": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "turn_time": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "float",
+          "default": null
+        },
+        "x": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "float",
+          "default": null
+        },
+        "y": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "float",
+          "default": null
+        },
+        "zoom": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "float",
+          "default": null
+        }
+      },
+      "required": [
+        "do"
+      ]
+    },
+    "ChoreoTrigger": {
+      "description": "The condition that starts a sequence. Mirrors the four trigger families in\nthe design spec: time/mode, game events, flags & chaining, explicit invoke.",
+      "oneOf": [
+        {
+          "description": "Fire when elapsed run time first exceeds `seconds`.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "after_seconds"
+            },
+            "seconds": {
+              "type": "number",
+              "format": "float"
+            }
+          },
+          "required": [
+            "kind",
+            "seconds"
+          ]
+        },
+        {
+          "description": "Fire when the enemy kill count reaches or exceeds `count`.",
+          "type": "object",
+          "properties": {
+            "count": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "kind": {
+              "type": "string",
+              "const": "after_kills"
+            }
+          },
+          "required": [
+            "kind",
+            "count"
+          ]
+        },
+        {
+          "description": "Fire when the run level reaches `level`.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "at_level"
+            },
+            "level": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "kind",
+            "level"
+          ]
+        },
+        {
+          "description": "Fire when the runtime mode matches (`intro`, `playing`, `level_up`, …).",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "on_mode"
+            },
+            "mode": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "mode"
+          ]
+        },
+        {
+          "description": "Fires immediately when armed (back-compat default for director cues).",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "always"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Fire when an enemy dies; `enemy_id` omitted matches any enemy.",
+          "type": "object",
+          "properties": {
+            "enemy_id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "default": null
+            },
+            "kind": {
+              "type": "string",
+              "const": "on_enemy_killed"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Fire when the player's HP fraction drops to/below `fraction` (0.0–1.0).",
+          "type": "object",
+          "properties": {
+            "fraction": {
+              "type": "number",
+              "format": "float"
+            },
+            "kind": {
+              "type": "string",
+              "const": "on_player_low_hp"
+            }
+          },
+          "required": [
+            "kind",
+            "fraction"
+          ]
+        },
+        {
+          "description": "Fire when a level-up becomes available.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "on_level_up"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Fire when an upgrade is picked; `upgrade_id` omitted matches any.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "on_upgrade_picked"
+            },
+            "upgrade_id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "default": null
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Fire when a dialogue line is queued; `speaker` omitted matches any.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "on_dialogue_line"
+            },
+            "speaker": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "default": null
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Fire when another sequence finishes.",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string",
+              "const": "on_sequence_finished"
+            }
+          },
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Never auto-fires; started only by `play_sequence(id)` from Lua/dialogue.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "manual"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        }
+      ]
+    },
+    "GestureAxis": {
+      "description": "Which world axis a gesture's offset oscillates along. The runtime composes\nthe result with the existing stride/sway offsets at draw time — a gesture is\na parametric offset curve, never a new sprite.",
+      "oneOf": [
+        {
+          "description": "World X (sideways shake): headshake, weight_shift.",
+          "type": "string",
+          "const": "horizontal"
+        },
+        {
+          "description": "World Y (vertical bob): nod, hop, breathe. Default.",
+          "type": "string",
+          "const": "vertical"
+        }
+      ]
+    },
+    "GestureDef": {
+      "description": "A named micro-gesture curve. All fields are data-tunable so modders can add\nor reshape gestures without touching Rust.\n\nThe motion is `amplitude * sin(2π · frequency · phase) * envelope(phase)`,\nwhere `phase` is `elapsed / duration` in `[0,1]`, applied along `axis`, plus\nan optional `scale_pulse` added to the sprite scale over the same envelope.",
+      "type": "object",
+      "properties": {
+        "amplitude": {
+          "description": "Peak offset in world pixels.",
+          "type": "number",
+          "format": "float",
+          "default": 4.0
+        },
+        "axis": {
+          "description": "Axis the offset oscillates along.",
+          "$ref": "#/$defs/GestureAxis",
+          "default": "vertical"
+        },
+        "duration": {
+          "description": "Total duration in seconds.",
+          "type": "number",
+          "format": "float",
+          "default": 0.3499999940395355
+        },
+        "frequency": {
+          "description": "Oscillations across the gesture's lifetime (1.0 = a single there-and-back).",
+          "type": "number",
+          "format": "float",
+          "default": 1.0
+        },
+        "scale_pulse": {
+          "description": "Optional additive sprite-scale pulse at the gesture's peak (0 = none).",
+          "type": "number",
+          "format": "float",
+          "default": 0.0
+        }
+      }
+    },
+    "SequenceDef": {
+      "description": "A named, triggerable unit of choreography.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Stable id; referenced by `on_sequence_finished` triggers and\n`play_sequence` invocations. Must be unique.",
+          "type": "string"
+        },
+        "note": {
+          "description": "Human-readable note — ignored by the engine, useful for authors.",
+          "type": "string",
+          "default": ""
+        },
+        "once": {
+          "description": "Fire at most once per run (default). `false` re-arms after it finishes.",
+          "type": "boolean",
+          "default": true
+        },
+        "requires_flag": {
+          "description": "The sequence stays inert until this flag is set (storyline gating).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "step": {
+          "description": "Ordered steps; the engine advances one at a time.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/StepDef"
+          }
+        },
+        "trigger": {
+          "description": "The single condition that starts this sequence.",
+          "$ref": "#/$defs/ChoreoTrigger",
+          "default": {
+            "kind": "always"
+          }
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "StepDef": {
+      "description": "One \"moment\" in a sequence. Beats inside it run in parallel; the step ends on\n`duration` or `wait_for` (whichever it declares), capped by `timeout`.",
+      "type": "object",
+      "properties": {
+        "beat": {
+          "description": "Parallel beats fired when this step becomes active.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/BeatDef"
+          }
+        },
+        "duration": {
+          "description": "Hold the step for this many seconds, then advance. Default `0.0` =\nadvance on the next frame (an instant \"fire these beats now\" step).",
+          "type": "number",
+          "format": "float",
+          "default": 0.0
+        },
+        "timeout": {
+          "description": "Hard cap (seconds) on any `wait_for` step so a blocked path or unset flag\ncan never deadlock a scene. Applied only when `wait_for` is set.",
+          "type": "number",
+          "format": "float",
+          "default": 8.0
+        },
+        "wait_for": {
+          "description": "Advance only once a condition is met instead of on a fixed duration.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WaitForDef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      }
+    },
+    "WaitForDef": {
+      "description": "What makes a `wait_for` step advance.",
+      "oneOf": [
+        {
+          "description": "Advance once every movement beat in this step has reached its target.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "arrive"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Advance once dialogue queued by this step has been dismissed/finished.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "dialogue"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Advance once a named flag becomes set.",
+          "type": "object",
+          "properties": {
+            "flag": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string",
+              "const": "flag"
+            }
+          },
+          "required": [
+            "kind",
+            "flag"
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,26 @@
+# Leitmotif — Tauri shell (own crate, NOT part of the EchoWarrior workspace).
+#
+# Kept deliberately thin: it only shells out to the `choreo` CLI. It does not
+# depend on the game crate, so the app and game evolve independently and the game
+# crate stays free of desktop-app weight.
+
+# Stand alone: never get absorbed into a parent Cargo workspace (the game repo).
+[workspace]
+
+[package]
+name = "leitmotif"
+version = "0.1.0"
+description = "EchoWarrior scene director (Tauri shell)"
+edition = "2021"
+rust-version = "1.77"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+
+[features]
+# Enabled by tauri to strip the console window on Windows release builds.
+custom-protocol = ["tauri/custom-protocol"]
