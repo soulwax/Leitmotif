@@ -34,11 +34,17 @@ const seqCount = $("seq-count");
 const validationOut = $("validation-output") as HTMLPreElement;
 const detailTitle = $("detail-title");
 const detailBody = $("detail-body");
+const timelineHost = $("timeline-host");
+const timelineName = $("timeline-name");
+const timelineChain = $("timeline-chain");
 
 const stageCanvas = $("stage") as HTMLCanvasElement;
 const stageMsg = $("stage-msg");
+const stageNow = $("stage-now");
+const stageHint = $("stage-hint");
 const scrub = $("scrub") as HTMLInputElement;
 const scrubTime = $("scrub-time");
+const scrubTotal = $("scrub-total");
 const btnPlay = $("btn-play") as HTMLButtonElement;
 const btnUndo = $("btn-undo") as HTMLButtonElement;
 const btnRedo = $("btn-redo") as HTMLButtonElement;
@@ -132,13 +138,32 @@ function sequenceRow(seq: Sequence): HTMLLIElement {
 
 function renderDetail(): void {
   detailBody.innerHTML = "";
+  timelineHost.innerHTML = "";
   const seq = selectedSeq ? doc.sequence(selectedSeq) : undefined;
   if (!seq) {
     detailTitle.textContent = "Sequence";
-    detailBody.appendChild(emptyNote("Select a sequence to see its steps and beats."));
+    timelineName.textContent = "Timeline";
+    timelineChain.textContent = "";
+    const hint = document.createElement("p");
+    hint.className = "empty";
+    hint.style.cssText = "color: var(--muted); font-size: 12.5px;";
+    hint.textContent = "Select a sequence to arrange its beats.";
+    timelineHost.appendChild(hint);
+    detailBody.appendChild(emptyNote("Select a beat to edit it. Fill only what the action needs."));
     return;
   }
   detailTitle.textContent = seq.id;
+  timelineName.textContent = seq.id;
+
+  // Timeline header: where this sequence sits in the story flow.
+  const leadsTo = doc.chains(seq.id);
+  timelineChain.innerHTML = "";
+  if (leadsTo.length) {
+    timelineChain.append("then starts ");
+    const b = document.createElement("b");
+    b.textContent = leadsTo.join(", ");
+    timelineChain.appendChild(b);
+  }
 
   // Trigger editor — *what starts this sequence*. Schema-driven; undoable.
   const trig = document.createElement("div");
@@ -160,12 +185,12 @@ function renderDetail(): void {
       void rebuildPreview();
     }),
   );
-  detailBody.appendChild(trig);
+  timelineHost.appendChild(trig);
 
-  // The node-graph timeline.
+  // The node-graph timeline (lives in the center column, under the stage).
   const tl = document.createElement("div");
-  tl.className = "timeline-wrap";
-  detailBody.appendChild(tl);
+  tl.className = "timeline";
+  timelineHost.appendChild(tl);
   renderTimeline(tl, seq, selectedBeat, {
     selectBeat: (si, bi) => {
       selectedBeat = [si, bi];
@@ -202,10 +227,15 @@ function renderDetail(): void {
     },
   });
 
-  // The inspector for the selected beat (schema-driven form).
+  // The inspector for the selected beat (schema-driven form) — right column.
   if (selectedBeat) {
     detailBody.appendChild(inspector(seq, selectedBeat[0], selectedBeat[1]));
+  } else {
+    detailBody.appendChild(
+      emptyNote("Pick a beat on the timeline to edit it. Fill only what the action needs."),
+    );
   }
+  updateStageHint();
 }
 
 /** After any structural edit, refresh the detail + list + dirty flag + preview. */
@@ -219,15 +249,26 @@ function afterStructuralEdit(): void {
 function inspector(seq: Sequence, si: number, bi: number): HTMLElement {
   const panel = document.createElement("div");
   panel.className = "inspector";
-  const h = document.createElement("h3");
-  h.textContent = "Beat";
-  panel.appendChild(h);
 
   const beat = seq.step?.[si]?.beat?.[bi];
   if (!beat) {
     panel.appendChild(emptyNote("Beat no longer exists."));
     return panel;
   }
+
+  // Header: verb as the title, actor + guidance underneath (design microcopy).
+  const verb = (beat.do ?? "beat").replace(/_/g, " ");
+  const actor = beat.actor ?? "someone";
+  const title = document.createElement("div");
+  title.className = "detail-title";
+  title.textContent = verb;
+  panel.appendChild(title);
+  const guide = document.createElement("p");
+  guide.className = "form-desc";
+  guide.style.marginBottom = "14px";
+  guide.textContent = `A single beat by ${actor}. Fill only what this action needs.`;
+  panel.appendChild(guide);
+
   // Edit a copy; commit through the doc so it owns state + dirty tracking. If the
   // verb changed, the card label changes too, so re-render the timeline.
   panel.appendChild(
@@ -271,6 +312,7 @@ async function rebuildPreview(): Promise<void> {
   playT = 0;
   if (!selectedSeq) {
     stageMsg.textContent = "Select a sequence to preview it.";
+    fitStageCanvas();
     drawStage(stageCanvas, null);
     return;
   }
@@ -279,6 +321,7 @@ async function rebuildPreview(): Promise<void> {
   if (token !== previewToken) return; // superseded by a newer rebuild
   if (!res.ok) {
     stageMsg.textContent = res.error ?? "preview failed";
+    fitStageCanvas();
     drawStage(stageCanvas, null);
     return;
   }
@@ -286,18 +329,49 @@ async function rebuildPreview(): Promise<void> {
   const dur = duration(frames);
   scrub.max = String(Math.max(dur, 0.001));
   scrub.value = "0";
+  scrubTotal.textContent = `${dur.toFixed(1)}s`;
   stageMsg.textContent =
     frames.length <= 2
       ? `Sequence '${selectedSeq}' produced no motion.`
       : `${frames.length} frames · ${dur.toFixed(1)}s`;
+  updateStageHint();
   drawAt(0);
+}
+
+/** Match the canvas backing store to its (flex-sized) container so the fog and
+ * grid stay crisp and the aspect never distorts. Called before each draw. */
+function fitStageCanvas(): void {
+  const rect = stageCanvas.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = Math.max(1, Math.round(rect.width * dpr));
+  const h = Math.max(1, Math.round(rect.height * dpr));
+  if (stageCanvas.width !== w || stageCanvas.height !== h) {
+    stageCanvas.width = w;
+    stageCanvas.height = h;
+  }
 }
 
 function drawAt(t: number): void {
   playT = t;
   scrub.value = String(t);
   scrubTime.textContent = `${t.toFixed(1)}s`;
+  stageNow.textContent = `${t.toFixed(1)}s`;
+  fitStageCanvas();
   drawStage(stageCanvas, frameAt(frames, t));
+}
+
+/** The bottom-left stage hint reflects whether a click will place a beat. */
+function updateStageHint(): void {
+  if (canPlaceOnStage()) {
+    stageHint.textContent = "Click anywhere to set where this action happens.";
+    stageCanvas.style.cursor = "crosshair";
+  } else if (selectedSeq && !selectedBeat) {
+    stageHint.textContent = "Select a beat to place it on the stage.";
+    stageCanvas.style.cursor = "default";
+  } else {
+    stageHint.textContent = "";
+    stageCanvas.style.cursor = "default";
+  }
 }
 
 /** The currently-selected beat, or null. */
@@ -528,4 +602,30 @@ function afterHistory(msg: string): void {
 // inspector picks up the suggestions. Degrades to free-text if unavailable.
 void loadAssets().then(() => renderDetail());
 
+// Keep the stage crisp as the window resizes; redraw the current frame.
+let resizeRaf = 0;
+window.addEventListener("resize", () => {
+  if (resizeRaf) return;
+  resizeRaf = requestAnimationFrame(() => {
+    resizeRaf = 0;
+    fitStageCanvas();
+    drawStage(stageCanvas, frames.length ? frameAt(frames, playT) : null);
+  });
+});
+
 renderAll();
+fitStageCanvas();
+drawStage(stageCanvas, null);
+
+// Dev-only seam: load a scene from a JSON string without the native dialog, so
+// the UI can be driven in a browser during development. Never present in a
+// production build (`import.meta.env.DEV` is compiled to `false` and dropped).
+if (import.meta.env.DEV) {
+  (window as unknown as { __lmLoad?: (json: string) => void }).__lmLoad = (json: string) => {
+    doc = SceneDoc.fromJson(json, "dev.json");
+    selectedSeq = doc.sequences()[0]?.id ?? null;
+    selectedBeat = selectedSeq ? [0, 0] : null;
+    renderAll();
+    void rebuildPreview();
+  };
+}

@@ -88,13 +88,36 @@ export function drawStage(canvas: HTMLCanvasElement, frame: PreviewFrame | null)
   const cw = canvas.width;
   const ch = canvas.height;
 
-  // Fog field: a radial haze from the centre, darkening to the edges.
-  const haze = ctx.createRadialGradient(cw / 2, ch * 0.46, ch * 0.1, cw / 2, ch / 2, ch * 0.95);
-  haze.addColorStop(0, "#1b1826");
-  haze.addColorStop(0.65, "#141019");
-  haze.addColorStop(1, "#0d0b12");
+  // Fog field: a radial haze off-centre (matches the design's lantern-lit stage),
+  // darkening to the edges.
+  const haze = ctx.createRadialGradient(
+    cw * 0.45,
+    ch * 0.42,
+    ch * 0.1,
+    cw * 0.5,
+    ch * 0.5,
+    Math.max(cw, ch) * 0.92,
+  );
+  haze.addColorStop(0, "#211c2c");
+  haze.addColorStop(0.56, "#14111a");
+  haze.addColorStop(1, "#0c0a11");
   ctx.fillStyle = haze;
   ctx.fillRect(0, 0, cw, ch);
+
+  // Faint even grid, like the design — a whisper of structure under the fog.
+  const gridPx = Math.max(24, Math.round(46 * (cw / 1120)));
+  ctx.strokeStyle = "rgba(255,255,255,0.028)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let gx = gridPx; gx < cw; gx += gridPx) {
+    ctx.moveTo(gx, 0);
+    ctx.lineTo(gx, ch);
+  }
+  for (let gy = gridPx; gy < ch; gy += gridPx) {
+    ctx.moveTo(0, gy);
+    ctx.lineTo(cw, gy);
+  }
+  ctx.stroke();
 
   // Arena outline (soft) + faint centre cross.
   ctx.strokeStyle = THEME.grid;

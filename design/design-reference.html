@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="a9547c67-b6d5-406e-9a86-ff61b9551e70"></script>
+</head>
+<body>
+
+<x-dc>
+<helmet data-dc-atomics="">
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<style>/* latin-ext */
+@font-face {
+  font-family: 'Instrument Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("7c6b65a2-bc9b-4905-b9f6-822e84d28103") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Instrument Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("2720ef65-7c7a-4c77-a5cf-034dbb89723e") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Instrument Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("7c6b65a2-bc9b-4905-b9f6-822e84d28103") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Instrument Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("2720ef65-7c7a-4c77-a5cf-034dbb89723e") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Instrument Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("7c6b65a2-bc9b-4905-b9f6-822e84d28103") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Instrument Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("2720ef65-7c7a-4c77-a5cf-034dbb89723e") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Newsreader';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("6628a569-53e5-4a52-bf2b-e7e5dcbc4fe5") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Newsreader';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("4bf48636-9359-4e43-a4aa-454cd142b69f") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Newsreader';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("f5928942-31fc-46ee-86c1-54671f5ae80f") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Newsreader';
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url("6628a569-53e5-4a52-bf2b-e7e5dcbc4fe5") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Newsreader';
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url("4bf48636-9359-4e43-a4aa-454cd142b69f") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Newsreader';
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url("f5928942-31fc-46ee-86c1-54671f5ae80f") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Space Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("e2faa8d1-9ba8-4ca6-a599-906c34862654") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Space Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("b9f56239-d410-4e70-b908-c81f8034e28c") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Space Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("345a580b-fc7c-4295-868e-67e2d0383d7e") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+</style>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#efece6;font-family:'Instrument Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+@keyframes lmFog{0%{transform:translate(0,0)}50%{transform:translate(-3%,2%)}100%{transform:translate(0,0)}}
+@keyframes lmPulse{0%,100%{opacity:.55}50%{opacity:1}}
+.lm-range{-webkit-appearance:none;appearance:none;height:4px;border-radius:3px;outline:none;cursor:pointer}
+.lm-range::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#e8c98a;border:2px solid #14121a;cursor:pointer;box-shadow:0 0 0 4px rgba(216,178,104,.18)}
+.lm-scroll::-webkit-scrollbar{width:9px;height:9px}
+.lm-scroll::-webkit-scrollbar-thumb{background:#332e46;border-radius:6px;border:2px solid transparent;background-clip:padding-box}
+.lm-scroll::-webkit-scrollbar-track{background:transparent}
+.dv-turn{padding:44px 46px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 24px}
+.dv-tid{font:600 10px 'Space Mono',monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px;text-decoration:none}
+.dv-tname{font:600 14px/1.2 'Instrument Sans',sans-serif;color:#1a1a1a}
+.dv-opts{display:flex;flex-wrap:wrap;gap:36px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:11px;scroll-margin-top:16px}
+.dv-olabel{display:flex;align-items:baseline;gap:9px;font:400 12.5px/1.4 'Instrument Sans',sans-serif;color:rgba(0,0,0,.6);max-width:660px}
+.dv-oid{font:600 11px 'Space Mono',monospace;padding:3px 7px;background:rgba(0,0,0,.09);color:#1a1a1a;border-radius:5px;text-decoration:none}
+.dv-opt:target .dv-oid{background:#2a78d6;color:#fff}
+.dv-cap{font:400 12px/1.5 'Instrument Sans',sans-serif;color:rgba(0,0,0,.5);max-width:640px}
+.dv-next{margin:30px 0 0;font:13px/1.7 'Instrument Sans',sans-serif;color:rgba(0,0,0,.5)}
+</style>
+</helmet>
+
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Leitmotif — main window at rest + layout directions</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="1a">
+<div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a> "Studio" layout — the interactive one. Sequences left · live stage over the timeline · beat inspector right. Scrub or press play; click an actor; click a beat to edit it; drag beats between steps.</div>
+<div style="width:1200px">
+
+<div style="width:1200px;height:800px;background:#14121a;border-radius:11px;overflow:hidden;border:1px solid #2a2536;box-shadow:0 34px 90px rgba(0,0,0,.5);display:flex;flex-direction:column;color:#e8e2d6;position:relative">
+
+<div style="height:34px;flex:none;display:flex;align-items:center;gap:9px;padding:0 6px 0 12px;background:#100e15;border-bottom:1px solid #211d2c">
+<div style="width:13px;height:13px;transform:rotate(45deg);background:linear-gradient(135deg,#e8c98a,#c9a24f);border-radius:2px;box-shadow:0 0 9px rgba(216,178,104,.5)"></div>
+<span style="font-size:12px;font-weight:600;letter-spacing:.03em">Leitmotif</span>
+<span style="font-size:11px;color:#6a6478">— Ashfall Vale</span>
+<div style="flex:1"></div>
+<div style="width:30px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:5px;color:#8a8397;font-size:14px">–</div>
+<div style="width:30px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:5px;color:#8a8397;font-size:9px">▢</div>
+<div style="width:30px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:5px;color:#8a8397;font-size:12px">✕</div>
+</div>
+
+<div style="height:52px;flex:none;display:flex;align-items:center;gap:11px;padding:0 15px;background:#171420;border-bottom:1px solid #221e2e">
+<button style="display:flex;align-items:center;gap:9px;background:#211d2c;border:1px solid #2f2a3d;color:#e8e2d6;padding:8px 13px;border-radius:9px;font:500 13px 'Instrument Sans';cursor:pointer">
+<span style="color:#8a8397;font-size:11px">Scene</span><span>Ashfall Vale</span><span style="color:#6a6478;font-size:10px">▾</span>
+</button>
+<sc-if value="{{ unsaved }}" hint-placeholder-val="{{ true }}">
+<span style="display:flex;align-items:center;gap:6px;font-size:12px;color:#c9a24f"><span style="width:7px;height:7px;border-radius:50%;background:#d8b268;box-shadow:0 0 8px rgba(216,178,104,.6)"></span>Unsaved changes</span>
+</sc-if>
+<div style="flex:1"></div>
+<button onclick="{{ undo }}" style="width:34px;height:34px;background:#211d2c;border:1px solid #2f2a3d;border-radius:9px;color:#e8e2d6;font-size:16px;cursor:pointer;opacity:{{ undoOpacity }}">↶</button>
+<button onclick="{{ redo }}" style="width:34px;height:34px;background:#211d2c;border:1px solid #2f2a3d;border-radius:9px;color:#e8e2d6;font-size:16px;cursor:pointer;opacity:{{ redoOpacity }}">↷</button>
+<div style="width:1px;height:22px;background:#2f2a3d;margin:0 3px"></div>
+<sc-if value="{{ saved }}" hint-placeholder-val="{{ false }}">
+<button onclick="{{ save }}" style="display:flex;align-items:center;gap:6px;background:transparent;border:1px solid #2f2a3d;color:#8a8397;padding:9px 15px;border-radius:9px;font:600 13px 'Instrument Sans';cursor:pointer">Saved ✓</button>
+</sc-if>
+<sc-if value="{{ unsaved }}" hint-placeholder-val="{{ true }}">
+<button onclick="{{ save }}" style="background:linear-gradient(180deg,#e8c98a,#d8b268);border:none;color:#20180a;padding:9px 17px;border-radius:9px;font:600 13px 'Instrument Sans';cursor:pointer;box-shadow:0 2px 12px rgba(216,178,104,.25)">Save scene</button>
+</sc-if>
+</div>
+
+<div style="flex:1;min-height:0;display:flex">
+
+<div class="lm-scroll" style="width:238px;flex:none;background:#16131e;border-right:1px solid #221e2e;overflow-y:auto;padding:16px 12px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:0 4px 2px">
+<span style="font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#6a6478">Sequences</span>
+<span style="color:#d8b268;font-size:19px;line-height:1;cursor:pointer">＋</span>
+</div>
+<sc-for list="{{ sequences }}" as="q" hint-placeholder-count="4">
+<div data-seq="{{ q.id }}" onclick="{{ selectSeq }}" style="position:relative;padding:12px 13px 12px 15px;border-radius:11px;cursor:pointer;background:{{ q.cardBg }};border:1px solid {{ q.cardBorder }}">
+<div style="position:absolute;left:0;top:11px;bottom:11px;width:3px;border-radius:2px;background:{{ q.accent }}"></div>
+<div style="font:600 13.5px 'Instrument Sans';color:#e8e2d6;margin-bottom:4px">{{ q.name }}</div>
+<div style="font:400 11.5px/1.45 'Instrument Sans';color:#8a8397;margin-bottom:9px">{{ q.note }}</div>
+<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:7px">
+<span style="font-size:10.5px;color:#b8b0a0;background:#211d2c;border:1px solid #2a2536;padding:2px 8px;border-radius:20px">{{ q.trigger }}</span>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between">
+<span style="font-size:10px;color:#5f5970;font-family:'Space Mono',monospace">{{ q.steps }} steps · {{ q.beats }} beats</span>
+<sc-if value="{{ q.hasChain }}" hint-placeholder-val="{{ false }}">
+<span style="font-size:10px;color:#75f0d6">→ {{ q.chain }}</span>
+</sc-if>
+</div>
+</div>
+</sc-for>
+</div>
+
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;background:#14121a">
+
+<div onclick="{{ onStageClick }}" style="flex:1.25;min-height:0;position:relative;overflow:hidden;background:radial-gradient(120% 92% at 45% 42%, #211c2c 0%, #14111a 56%, #0c0a11 100%);cursor:crosshair">
+<div style="position:absolute;inset:-12%;background:radial-gradient(48% 44% at 30% 62%, rgba(126,116,158,.14), transparent 70%),radial-gradient(44% 40% at 72% 34%, rgba(92,124,142,.12), transparent 70%);opacity:{{ fogOpacity }};animation:lmFog 20s ease-in-out infinite;pointer-events:none"></div>
+<div style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.028) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.028) 1px,transparent 1px);background-size:46px 46px;pointer-events:none"></div>
+<div style="position:absolute;inset:0;box-shadow:inset 0 0 160px rgba(0,0,0,.7);pointer-events:none"></div>
+
+<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none">
+<polyline points="{{ evePathPoints }}" fill="none" stroke="#d8b268" stroke-width="0.45" stroke-dasharray="1.4 1.4" opacity="0.5"></polyline>
+</svg>
+
+<div style="position:absolute;left:{{ lantern.x }}%;top:{{ lantern.y }}%;width:220px;height:220px;transform:translate(-50%,-55%);border-radius:50%;background:radial-gradient(circle, rgba(232,201,138,.5), transparent 62%);opacity:{{ lantern.opacity }};pointer-events:none;filter:blur(3px)"></div>
+
+<div style="position:absolute;left:{{ cam.x }}%;top:{{ cam.y }}%;width:{{ cam.w }}%;height:{{ cam.h }}%;border:1.5px dashed rgba(216,178,104,.5);border-radius:3px;pointer-events:none">
+<div style="position:absolute;left:-1px;top:-1px;width:11px;height:11px;border-left:2px solid #d8b268;border-top:2px solid #d8b268"></div>
+<div style="position:absolute;right:-1px;top:-1px;width:11px;height:11px;border-right:2px solid #d8b268;border-top:2px solid #d8b268"></div>
+<div style="position:absolute;left:-1px;bottom:-1px;width:11px;height:11px;border-left:2px solid #d8b268;border-bottom:2px solid #d8b268"></div>
+<div style="position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;border-right:2px solid #d8b268;border-bottom:2px solid #d8b268"></div>
+<span style="position:absolute;top:5px;left:8px;font-size:9px;letter-spacing:.12em;color:rgba(216,178,104,.85)">CAMERA</span>
+</div>
+
+<sc-for list="{{ stageActors }}" as="a" hint-placeholder-count="5">
+<div data-actor="{{ a.id }}" onclick="{{ selectActor }}" style="position:absolute;left:{{ a.x }}%;top:{{ a.y }}%;transform:translate(-50%,-50%);cursor:pointer">
+<sc-if value="{{ a.selected }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;left:50%;top:50%;width:36px;height:36px;transform:translate(-50%,-50%);border:1.5px solid rgba(216,178,104,.85);border-radius:50%;box-shadow:0 0 14px rgba(216,178,104,.45)"></div>
+</sc-if>
+<div style="position:absolute;left:50%;top:50%;width:0;height:0;transform:rotate({{ a.facingDeg }}deg)">
+<div style="position:absolute;left:12px;top:-5px;width:0;height:0;border-left:7px solid {{ a.color }};border-top:5px solid transparent;border-bottom:5px solid transparent"></div>
+</div>
+<div style="width:17px;height:17px;border-radius:50%;background:{{ a.color }};box-shadow:0 0 0 4px rgba(12,10,17,.75),0 2px 8px rgba(0,0,0,.6)"></div>
+<div style="position:absolute;top:20px;left:50%;transform:translateX(-50%);white-space:nowrap;font:600 12px 'Instrument Sans';color:#f4efe6;text-shadow:0 1px 2px #000,0 0 4px #000;border-bottom:2px solid {{ a.color }};padding-bottom:1px">{{ a.name }}</div>
+<sc-if value="{{ a.speaking }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;bottom:28px;left:50%;transform:translateX(-50%);width:224px;background:rgba(20,17,28,.96);border:1px solid rgba(216,178,104,.35);border-radius:11px;padding:10px 13px;box-shadow:0 10px 30px rgba(0,0,0,.55)">
+<div style="font:italic 400 14px/1.5 'Newsreader',serif;color:#efe7d7">{{ a.line }}</div>
+</div>
+</sc-if>
+</div>
+</sc-for>
+
+<sc-if value="{{ walkSel }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;left:{{ destX }}%;top:{{ destY }}%;transform:translate(-50%,-50%);pointer-events:none">
+<div style="width:28px;height:28px;border:1.5px dashed rgba(216,178,104,.85);border-radius:50%;animation:lmPulse 2s infinite"></div>
+<div style="position:absolute;top:30px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:10.5px;color:#d8b268;background:rgba(16,14,21,.88);padding:3px 9px;border-radius:12px;border:1px solid rgba(216,178,104,.28)">Walks to · {{ destLabel }}</div>
+</div>
+</sc-if>
+
+<div style="position:absolute;top:13px;left:15px;display:flex;align-items:center;gap:8px;background:rgba(16,14,21,.78);border:1px solid #2a2536;border-radius:20px;padding:5px 13px;pointer-events:none">
+<span style="font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:#6a6478">Now</span>
+<span style="font:600 12px 'Instrument Sans';color:#e8e2d6">{{ curStepName }}</span>
+</div>
+<div style="position:absolute;top:13px;right:15px;display:flex;align-items:center;gap:7px;font-size:10.5px;color:#75f0d6;background:rgba(16,14,21,.7);border:1px solid rgba(117,240,214,.25);border-radius:20px;padding:5px 12px;pointer-events:none">
+<span style="width:6px;height:6px;border-radius:50%;background:#75f0d6;box-shadow:0 0 8px #75f0d6;animation:lmPulse 2s infinite"></span>Live preview
+</div>
+<div style="position:absolute;bottom:13px;left:15px;font-size:10.5px;color:#5f5970;pointer-events:none">Click anywhere to set where the selected actor walks</div>
+</div>
+
+<div style="flex:none;height:48px;display:flex;align-items:center;gap:15px;padding:0 17px;background:#100e15;border-top:1px solid #221e2e">
+<button onclick="{{ togglePlay }}" style="width:33px;height:33px;border-radius:50%;background:linear-gradient(180deg,#e8c98a,#d8b268);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 11px rgba(216,178,104,.3)">
+<sc-if value="{{ paused }}" hint-placeholder-val="{{ true }}">
+<span style="width:0;height:0;border-left:11px solid #20180a;border-top:7px solid transparent;border-bottom:7px solid transparent;margin-left:3px"></span>
+</sc-if>
+<sc-if value="{{ playing }}" hint-placeholder-val="{{ false }}">
+<span style="display:flex;gap:3px"><span style="width:3px;height:12px;background:#20180a"></span><span style="width:3px;height:12px;background:#20180a"></span></span>
+</sc-if>
+</button>
+<span style="font-family:'Space Mono',monospace;font-size:12px;color:#e8e2d6;min-width:32px">{{ timeLabel }}</span>
+<input type="range" class="lm-range" min="0" max="{{ scrubMax }}" step="0.01" value="{{ currentTime }}" onchange="{{ onScrub }}" style="flex:1;background:{{ scrubFill }}">
+<span style="font-family:'Space Mono',monospace;font-size:12px;color:#6a6478;min-width:32px">{{ totalLabel }}</span>
+</div>
+
+<div style="flex:1;min-height:0;background:#161320;display:flex;flex-direction:column;border-top:1px solid #221e2e">
+<div style="flex:none;height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 17px;border-bottom:1px solid #221e2e">
+<div style="display:flex;align-items:baseline;gap:10px">
+<span style="font:600 13px 'Instrument Sans';color:#e8e2d6">Eve's entrance</span>
+<span style="font-size:11px;color:#6a6478">steps play left → right · beats in a step happen together</span>
+</div>
+<div style="display:flex;align-items:center;gap:7px;font-size:11px;color:#8a8397">
+<span>then starts</span><span style="color:#75f0d6">Siegfried's warning</span>
+</div>
+</div>
+<div class="lm-scroll" style="flex:1;min-height:0;overflow-x:auto;overflow-y:hidden;padding:14px 17px">
+<div style="position:relative;display:flex;gap:11px;height:100%;min-width:100%">
+<sc-for list="{{ steps }}" as="step" hint-placeholder-count="3">
+<div style="flex:{{ step.dur }} 1 0;min-width:206px;display:flex;flex-direction:column;gap:9px">
+<div draggable="true" data-step="{{ step.id }}" onclick="{{ selectStep }}" ondragstart="{{ onStepDragStart }}" ondrop="{{ onStepDrop }}" ondragover="{{ onDragOver }}" style="display:flex;align-items:center;gap:8px;padding:8px 11px;border-radius:10px;cursor:grab;background:{{ step.headerBg }};border:1px solid {{ step.headerBorder }}">
+<span style="color:#4f4a5f;font-size:12px;letter-spacing:-2px">⁚⁚</span>
+<span style="font:600 12.5px 'Instrument Sans';color:#e8e2d6;flex:1">{{ step.name }}</span>
+<span style="font-family:'Space Mono',monospace;font-size:10px;color:#6a6478">{{ step.durLabel }}</span>
+</div>
+<div data-step="{{ step.id }}" ondrop="{{ onBeatDrop }}" ondragover="{{ onDragOver }}" style="flex:1;display:flex;flex-direction:column;gap:8px;padding:3px;border-radius:10px">
+<sc-for list="{{ step.beats }}" as="beat" hint-placeholder-count="2">
+<div draggable="true" data-beat="{{ beat.id }}" onclick="{{ selectBeat }}" ondragstart="{{ onBeatDragStart }}" style="display:flex;align-items:flex-start;gap:9px;padding:9px 10px;border-radius:10px;cursor:grab;border:1.5px {{ beat.borderStyle }} {{ beat.borderColor }};background:{{ beat.bg }}">
+<span style="flex:none;width:25px;height:25px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#14121a;background:{{ beat.actorColor }}">{{ beat.glyph }}</span>
+<div style="flex:1;min-width:0">
+<div style="font-size:12.5px;line-height:1.25;margin-bottom:2px"><span style="font-weight:600;color:{{ beat.actorColor }}">{{ beat.actorName }}</span><span style="color:#4f4a5f"> · </span><span style="color:#e8e2d6">{{ beat.title }}</span></div>
+<sc-if value="{{ beat.isSay }}" hint-placeholder-val="{{ false }}">
+<div style="font:italic 400 12px/1.35 'Newsreader',serif;color:#a89f8d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ beat.summary }}</div>
+</sc-if>
+<sc-if value="{{ beat.notSay }}" hint-placeholder-val="{{ true }}">
+<div style="font-size:11px;line-height:1.3;color:{{ beat.summaryColor }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ beat.summary }}</div>
+</sc-if>
+</div>
+</div>
+</sc-for>
+<div data-step="{{ step.id }}" onclick="{{ addBeat }}" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:7px;border-radius:10px;border:1px dashed #2f2a3d;color:#6a6478;font-size:11.5px;cursor:pointer">＋ add beat</div>
+</div>
+</div>
+</sc-for>
+<div onclick="{{ addStep }}" style="flex:none;width:54px;align-self:stretch;display:flex;align-items:center;justify-content:center;border-radius:10px;border:1px dashed #2f2a3d;color:#6a6478;font-size:22px;cursor:pointer">＋</div>
+<div style="position:absolute;top:0;bottom:0;left:{{ playheadPct }}%;width:2px;background:{{ gold }};box-shadow:0 0 11px rgba(216,178,104,.6);pointer-events:none;z-index:5">
+<div style="position:absolute;top:-2px;left:-4px;width:10px;height:10px;border-radius:50%;background:{{ gold }};box-shadow:0 0 8px rgba(216,178,104,.7)"></div>
+</div>
+</div>
+</div>
+</div>
+
+</div>
+
+<div class="lm-scroll" style="width:322px;flex:none;background:#16131e;border-left:1px solid #221e2e;overflow-y:auto">
+<sc-if value="{{ hasSel }}" hint-placeholder-val="{{ true }}">
+<div style="padding:17px 17px 22px">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:5px">
+<span style="flex:none;width:39px;height:39px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:19px;color:#14121a;background:{{ insActorColor }};box-shadow:0 0 18px rgba(216,178,104,.2)">{{ insGlyph }}</span>
+<div>
+<div style="font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:#6a6478">{{ insVerb }}</div>
+<div style="font:600 16px 'Instrument Sans';color:#efe7d7">{{ insTitle }}</div>
+</div>
+</div>
+<div style="font-size:12px;line-height:1.5;color:#8a8397;margin:0 0 20px">A single beat by <span style="color:{{ insActorColor }}">{{ insActorName }}</span>. Fill only what this action needs.</div>
+
+<sc-for list="{{ fields }}" as="field" hint-placeholder-count="4">
+<div style="margin-bottom:17px">
+<label style="display:block;font:500 12px 'Instrument Sans';color:#c7bfb0;margin-bottom:8px">{{ field.label }}</label>
+
+<sc-if value="{{ field.isActor }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;align-items:center;gap:9px;background:#211d2c;border:1px solid #2f2a3d;border-radius:10px;padding:10px 12px">
+<span style="width:12px;height:12px;border-radius:50%;background:{{ field.actorColor }}"></span>
+<span style="flex:1;font-size:13px;color:#e8e2d6">{{ field.actorName }}</span>
+<span style="color:#6a6478;font-size:10px">change ▾</span>
+</div>
+</sc-if>
+
+<sc-if value="{{ field.isDest }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;align-items:center;gap:9px;background:#211d2c;border:1px solid {{ field.destBorder }};border-radius:10px;padding:10px 12px">
+<span style="width:9px;height:9px;border-radius:50%;border:1.5px solid {{ field.destColor }}"></span>
+<span style="flex:1;font-size:13px;color:{{ field.destColor }}">{{ field.destValue }}</span>
+</div>
+<button style="display:flex;align-items:center;justify-content:center;gap:7px;background:rgba(216,178,104,.1);border:1px solid rgba(216,178,104,.3);color:#d8b268;padding:8px;border-radius:9px;font:500 12px 'Instrument Sans';cursor:pointer">◎ Pick a spot on the stage</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ field.isSelect }}" hint-placeholder-val="{{ false }}">
+<div style="position:relative">
+<select data-key="{{ field.key }}" value="{{ field.value }}" onchange="{{ onFieldSelect }}" style="width:100%;background:#211d2c;border:1px solid #2f2a3d;border-radius:10px;padding:10px 30px 10px 12px;color:#e8e2d6;font:400 13px 'Instrument Sans';cursor:pointer;-webkit-appearance:none;appearance:none">
+<option value="{{ opt }}">{{ opt }}</option>
+</select>
+<span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:#6a6478;font-size:10px">▾</span>
+</div>
+</sc-if>
+
+<sc-if value="{{ field.isText }}" hint-placeholder-val="{{ false }}">
+<textarea data-key="{{ field.key }}" value="{{ field.value }}" onchange="{{ onFieldText }}" style="width:100%;min-height:78px;resize:vertical;background:#1b1826;border:1px solid #2f2a3d;border-radius:10px;padding:11px 13px;color:#efe7d7;font:italic 400 14px/1.55 'Newsreader',serif"></textarea>
+</sc-if>
+
+<sc-if value="{{ field.isToggle }}" hint-placeholder-val="{{ false }}">
+<div data-key="{{ field.key }}" onclick="{{ onFieldToggle }}" style="display:flex;align-items:center;gap:11px;cursor:pointer">
+<div style="width:40px;height:22px;border-radius:12px;background:{{ field.toggleBg }};position:relative">
+<div style="position:absolute;top:2px;left:{{ field.toggleX }};width:18px;height:18px;border-radius:50%;background:#efe7d7"></div>
+</div>
+<span style="font-size:12px;color:#8a8397">{{ field.toggleLabel }}</span>
+</div>
+</sc-if>
+
+<sc-if value="{{ field.isSlider }}" hint-placeholder-val="{{ false }}">
+<input type="range" class="lm-range" data-key="{{ field.key }}" min="0" max="100" value="{{ field.value }}" onchange="{{ onFieldSlider }}" style="width:100%;background:linear-gradient(90deg,#d8b268 {{ field.value }}%,#3a3550 {{ field.value }}%)">
+</sc-if>
+
+<sc-if value="{{ field.hasHint }}" hint-placeholder-val="{{ false }}">
+<div style="font-size:11px;line-height:1.45;color:#6a6478;margin-top:7px">{{ field.hint }}</div>
+</sc-if>
+</div>
+</sc-for>
+
+<button data-beat="{{ selBeatId }}" onclick="{{ removeBeat }}" style="width:100%;margin-top:6px;background:transparent;border:1px solid #33202a;color:#a86a6a;padding:9px;border-radius:9px;font:500 12px 'Instrument Sans';cursor:pointer">Remove this beat</button>
+</div>
+</sc-if>
+</div>
+
+</div>
+
+<div style="flex:none;min-height:40px;display:flex;align-items:center;gap:12px;padding:0 17px;background:#100e15;border-top:1px solid #221e2e">
+<sc-if value="{{ hasIssues }}" hint-placeholder-val="{{ false }}">
+<span style="display:flex;align-items:center;gap:9px;color:#e0b06a;font-size:12.5px">
+<span style="flex:none;width:18px;height:18px;border-radius:50%;background:rgba(224,176,106,.15);border:1px solid rgba(224,176,106,.5);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600">!</span>
+{{ firstIssue.msg }}
+</span>
+<button data-beat="{{ firstIssue.beat }}" onclick="{{ fixIssue }}" style="background:rgba(224,176,106,.14);border:1px solid rgba(224,176,106,.4);color:#e0b06a;font-size:11.5px;padding:4px 12px;border-radius:8px;cursor:pointer">Show me</button>
+</sc-if>
+<sc-if value="{{ noIssues }}" hint-placeholder-val="{{ true }}">
+<span style="display:flex;align-items:center;gap:9px;color:#75f0d6;font-size:12.5px">
+<span style="flex:none;width:18px;height:18px;border-radius:50%;background:rgba(117,240,214,.13);border:1px solid rgba(117,240,214,.45);display:flex;align-items:center;justify-content:center;font-size:11px">✓</span>
+{{ okMsg }}
+</span>
+</sc-if>
+<div style="flex:1"></div>
+<span style="font-size:11px;color:#5f5970">Autosaves as you work</span>
+</div>
+
+</div>
+
+</div>
+</div>
+
+<div class="dv-opt" id="1b">
+<div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a> "Stage-first" — the live preview dominates, the timeline shrinks to a scrubber strip along the bottom, and the inspector slides in as a drawer only when a beat is picked. Most cinematic; best for reviewing, tighter for heavy editing.</div>
+<div style="width:660px;background:#14121a;border-radius:10px;overflow:hidden;border:1px solid #2a2536;box-shadow:0 22px 56px rgba(0,0,0,.42)">
+<div style="height:28px;display:flex;align-items:center;gap:8px;padding:0 11px;background:#100e15;border-bottom:1px solid #211d2c">
+<div style="width:10px;height:10px;transform:rotate(45deg);background:linear-gradient(135deg,#e8c98a,#c9a24f);border-radius:2px"></div>
+<span style="font-size:11px;font-weight:600">Leitmotif</span><span style="font-size:10px;color:#6a6478">— Ashfall Vale</span>
+</div>
+<div style="height:352px;display:flex">
+<div style="width:46px;flex:none;background:#16131e;border-right:1px solid #221e2e;display:flex;flex-direction:column;align-items:center;gap:11px;padding-top:14px">
+<div style="width:22px;height:22px;border-radius:6px;background:rgba(216,178,104,.14);border:1px solid rgba(216,178,104,.4)"></div>
+<div style="width:22px;height:22px;border-radius:6px;background:#211d2c"></div>
+<div style="width:22px;height:22px;border-radius:6px;background:#211d2c"></div>
+<div style="margin-top:auto;margin-bottom:12px;writing-mode:vertical-rl;font-size:9px;letter-spacing:.14em;color:#4f4a5f;text-transform:uppercase">Sequences</div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column">
+<div style="flex:1;position:relative;background:radial-gradient(120% 100% at 45% 42%, #221c2e 0%, #14111a 60%, #0c0a11 100%);overflow:hidden">
+<div style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:40px 40px"></div>
+<div style="position:absolute;left:24%;top:56%;width:12px;height:12px;border-radius:50%;background:#78e6cf;box-shadow:0 0 0 3px rgba(12,10,17,.7)"></div>
+<div style="position:absolute;left:52%;top:44%;width:12px;height:12px;border-radius:50%;background:#c58fd6;box-shadow:0 0 0 3px rgba(12,10,17,.7)"></div>
+<div style="position:absolute;left:64%;top:50%;width:13px;height:13px;border-radius:50%;background:#d8b268;box-shadow:0 0 0 3px rgba(12,10,17,.7),0 0 14px rgba(216,178,104,.5)"></div>
+<div style="position:absolute;left:16%;top:16%;width:66%;height:64%;border:1.5px dashed rgba(216,178,104,.4);border-radius:3px"></div>
+<div style="position:absolute;top:13px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:600;color:#c7bfb0;background:rgba(16,14,21,.6);padding:4px 12px;border-radius:14px;border:1px solid #2a2536">LIVE STAGE — the star of the show</div>
+</div>
+<div style="flex:none;height:74px;background:#100e15;border-top:1px solid #221e2e;padding:9px 13px;display:flex;flex-direction:column;gap:7px">
+<div style="display:flex;align-items:center;gap:9px">
+<div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(180deg,#e8c98a,#d8b268)"></div>
+<div style="flex:1;height:4px;border-radius:2px;background:linear-gradient(90deg,#d8b268 38%,#3a3550 38%)"></div>
+</div>
+<div style="font-size:9.5px;color:#5f5970;text-align:center">TIMELINE — a slim scrubber strip</div>
+<div style="display:flex;gap:6px"><div style="flex:2;height:14px;border-radius:4px;background:rgba(216,178,104,.12);border:1px solid rgba(216,178,104,.28)"></div><div style="flex:1;height:14px;border-radius:4px;background:#211d2c"></div><div style="flex:3;height:14px;border-radius:4px;background:#211d2c"></div></div>
+</div>
+</div>
+<div style="width:158px;flex:none;background:rgba(22,19,30,.96);border-left:1px solid rgba(216,178,104,.25);padding:14px 12px;box-shadow:-14px 0 30px rgba(0,0,0,.4)">
+<div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#6a6478;margin-bottom:4px">Move</div>
+<div style="font:600 14px 'Instrument Sans';color:#efe7d7;margin-bottom:14px">Walk in</div>
+<div style="height:9px;width:60%;background:#332e46;border-radius:3px;margin-bottom:9px"></div>
+<div style="height:34px;background:#211d2c;border:1px solid #2f2a3d;border-radius:8px;margin-bottom:11px"></div>
+<div style="height:9px;width:45%;background:#332e46;border-radius:3px;margin-bottom:9px"></div>
+<div style="height:34px;background:#211d2c;border:1px solid #2f2a3d;border-radius:8px;margin-bottom:14px"></div>
+<div style="font-size:9.5px;color:#4f4a5f;text-align:center">Inspector — slides in when a beat is picked</div>
+</div>
+</div>
+</div>
+<div class="dv-cap">Trade-off: the preview reads beautifully and feels like a director's monitor, but the timeline has less room, so composing long sequences means more scrolling.</div>
+</div>
+
+<div class="dv-opt" id="1c">
+<div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a> "Timeline-first" — sequences become tabs along the top, the timeline is the full-width main workspace, the stage floats as a movable monitor you park anywhere, and the inspector docks along the bottom. Best for power editing.</div>
+<div style="width:660px;background:#14121a;border-radius:10px;overflow:hidden;border:1px solid #2a2536;box-shadow:0 22px 56px rgba(0,0,0,.42)">
+<div style="height:28px;display:flex;align-items:center;gap:8px;padding:0 11px;background:#100e15;border-bottom:1px solid #211d2c">
+<div style="width:10px;height:10px;transform:rotate(45deg);background:linear-gradient(135deg,#e8c98a,#c9a24f);border-radius:2px"></div>
+<span style="font-size:11px;font-weight:600">Leitmotif</span>
+</div>
+<div style="height:34px;display:flex;align-items:flex-end;gap:5px;padding:0 12px;background:#171420;border-bottom:1px solid #221e2e">
+<div style="padding:6px 12px;border-radius:8px 8px 0 0;background:#161320;border:1px solid #221e2e;border-bottom:none;font-size:11px;font-weight:600;color:#e8e2d6">Eve's entrance</div>
+<div style="padding:6px 12px;font-size:11px;color:#6a6478">Siegfried's warning</div>
+<div style="padding:6px 12px;font-size:11px;color:#6a6478">The lantern rises</div>
+</div>
+<div style="height:326px;position:relative;background:#161320;display:flex;flex-direction:column">
+<div style="flex:1;padding:14px;display:flex;gap:9px">
+<div style="flex:2;display:flex;flex-direction:column;gap:8px">
+<div style="height:26px;border-radius:8px;background:rgba(216,178,104,.1);border:1px solid rgba(216,178,104,.3)"></div>
+<div style="height:44px;border-radius:8px;background:rgba(216,178,104,.14);border:1.5px solid #d8b268"></div>
+<div style="height:44px;border-radius:8px;background:#211d2c;border:1px solid #2a2536"></div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px">
+<div style="height:26px;border-radius:8px;background:#1d1a28;border:1px solid #221e2e"></div>
+<div style="height:44px;border-radius:8px;background:#211d2c;border:1px solid #2a2536"></div>
+</div>
+<div style="flex:3;display:flex;flex-direction:column;gap:8px">
+<div style="height:26px;border-radius:8px;background:#1d1a28;border:1px solid #221e2e"></div>
+<div style="height:44px;border-radius:8px;background:#211d2c;border:1px solid #2a2536"></div>
+<div style="height:44px;border-radius:8px;background:#211d2c;border:1px solid #2a2536"></div>
+</div>
+<div style="position:absolute;top:20px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:600;color:#c7bfb0;background:rgba(22,19,32,.85);padding:4px 12px;border-radius:14px;border:1px solid #2a2536">TIMELINE — full-width workspace</div>
+</div>
+<div style="flex:none;height:80px;background:#100e15;border-top:1px solid #221e2e;display:flex;align-items:center;gap:11px;padding:0 14px">
+<div style="width:36px;height:36px;border-radius:9px;background:#d8b268"></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:7px"><div style="height:9px;width:35%;background:#332e46;border-radius:3px"></div><div style="height:30px;background:#211d2c;border:1px solid #2f2a3d;border-radius:8px"></div></div>
+<div style="font-size:9.5px;color:#4f4a5f;white-space:nowrap">Inspector<br>docked below</div>
+</div>
+<div style="position:absolute;top:22px;right:20px;width:186px;height:120px;background:radial-gradient(120% 100% at 45% 42%, #221c2e, #0c0a11);border:1px solid rgba(216,178,104,.35);border-radius:8px;box-shadow:0 14px 34px rgba(0,0,0,.5);overflow:hidden">
+<div style="height:15px;background:#100e15;border-bottom:1px solid #221e2e;display:flex;align-items:center;padding:0 7px;font-size:8px;color:#6a6478">◱ Stage — drag me anywhere</div>
+<div style="position:absolute;left:30%;top:56%;width:9px;height:9px;border-radius:50%;background:#78e6cf"></div>
+<div style="position:absolute;left:60%;top:50%;width:10px;height:10px;border-radius:50%;background:#d8b268;box-shadow:0 0 10px rgba(216,178,104,.5)"></div>
+<div style="position:absolute;left:18%;top:30%;width:64%;height:52%;border:1px dashed rgba(216,178,104,.4);border-radius:2px"></div>
+</div>
+</div>
+</div>
+<div class="dv-cap">Trade-off: maximum room to choreograph and reorder, and the stage goes where you want it — but the preview is smaller by default and the layout is busier for a first-timer.</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: "build out <a class="dv-oid" href="#1b">1b</a> fully" · "make a light variant of <a class="dv-oid" href="#1a">1a</a>" · "show the first-run empty state" · "the inspector for a Say beat side-by-side with Walk"</p>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;atmosphere&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:62,&quot;min&quot;:0,&quot;max&quot;:100,&quot;step&quot;:1,&quot;unit&quot;:&quot;%&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Mood&quot;,&quot;label&quot;:&quot;Fog &amp; lantern glow&quot;},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#d8b268&quot;,&quot;options&quot;:[&quot;#d8b268&quot;,&quot;#c9a24f&quot;,&quot;#e0b878&quot;,&quot;#b98f4a&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Mood&quot;,&quot;label&quot;:&quot;Gold accent&quot;}}">
+class Component extends DCLogic {
+  TOTAL = 7.0;
+  ACTORS = {eve:{name:'Eve',color:'#d8b268'},siegfried:{name:'Siegfried',color:'#78e6cf'},helena:{name:'Helena',color:'#c58fd6'},sophia:{name:'Sophia',color:'#8fb4d6'},enid:{name:'Enid',color:'#d69a8f'},camera:{name:'Camera',color:'#b8b0a0'}};
+  BASE = {siegfried:{x:40,y:60},helena:{x:57,y:45},sophia:{x:50,y:27},enid:{x:43,y:77}};
+  ENTRY = {x:-7,y:52};
+  GLYPH = {walk:'→',say:'\u201C',face:'\u21BB',camera:'\u25F2',prop:'\u2726'};
+  VERBLBL = {walk:'Move',say:'Dialogue',face:'Turn',camera:'Camera',prop:'Action'};
+
+  state = {
+    currentTime:0, playing:false, saved:false,
+    selectedSeq:'eve', selectedStep:'s1', selectedBeatId:'b1',
+    eveDest:{x:50,y:52},
+    undo:[], redo:[],
+    sequences:[
+      {id:'eve',name:"Eve's entrance",steps:3,beats:7,trigger:'On a dialogue line',note:'She arrives at the ashfall clearing and greets Siegfried.',chain:"Siegfried's warning"},
+      {id:'sig',name:"Siegfried's warning",steps:2,beats:4,trigger:'When Eve finishes',note:'He warns her the vale is not safe after dark.',chain:''},
+      {id:'lantern',name:'The lantern rises',steps:1,beats:3,trigger:'On area enter',note:'Helena lifts the lantern and the fog draws back.',chain:''},
+      {id:'helena',name:'Helena departs',steps:2,beats:3,trigger:'Played manually',note:'She slips into the trees, leaving the light behind.',chain:''}
+    ],
+    steps:[
+      {id:'s1',name:'Eve arrives',dur:2.6,beats:[
+        {id:'b1',actor:'eve',verb:'walk',title:'Walk in',fields:[
+          {key:'who',type:'actor',label:'Who moves',value:'eve'},
+          {key:'to',type:'destination',label:'Walk to',value:'Center of the clearing',hint:'Click anywhere on the stage to place where Eve stops — no coordinates to type.'},
+          {key:'speed',type:'select',label:'How fast',value:'Walk',options:['Stroll','Walk','Hurry']},
+          {key:'easing',type:'select',label:'Movement feel',value:'Ease in and out',options:['Ease in and out','Steady pace','Slow to a stop']},
+          {key:'facing',type:'select',label:'Facing when she stops',value:'Toward Siegfried',options:['Toward Siegfried','Toward Helena','Keep walking direction','Toward the camera']}
+        ]},
+        {id:'b2',actor:'camera',verb:'camera',title:'Lean in',fields:[
+          {key:'move',type:'select',label:'Camera move',value:'Lean in',options:['Lean in','Pull back','Follow Eve','Hold still']},
+          {key:'focus',type:'actor',label:'Keep in view',value:'eve'},
+          {key:'amount',type:'slider',label:'How close',value:60,hint:'A gentle nudge — not a jump cut.'},
+          {key:'over',type:'select',label:'Over how long',value:'The whole step',options:['Half a second','The whole step','Two seconds']}
+        ]},
+        {id:'b7',actor:'enid',verb:'walk',title:'Walk in',fields:[
+          {key:'who',type:'actor',label:'Who moves',value:'enid'},
+          {key:'to',type:'destination',label:'Walk to',value:'',hint:'Click anywhere on the stage to place where Enid stops.'},
+          {key:'speed',type:'select',label:'How fast',value:'Stroll',options:['Stroll','Walk','Hurry']}
+        ]}
+      ]},
+      {id:'s2',name:'She turns',dur:1.0,beats:[
+        {id:'b3',actor:'eve',verb:'face',title:'Turn to face',fields:[
+          {key:'who',type:'actor',label:'Who turns',value:'eve'},
+          {key:'toward',type:'select',label:'Face toward',value:'Siegfried',options:['Siegfried','Helena','Sophia','Enid','The camera']},
+          {key:'speed',type:'select',label:'Turn speed',value:'Natural',options:['Natural','Snap','Slow']}
+        ]},
+        {id:'b4',actor:'siegfried',verb:'face',title:'Turn to face',fields:[
+          {key:'who',type:'actor',label:'Who turns',value:'siegfried'},
+          {key:'toward',type:'select',label:'Face toward',value:'Eve',options:['Eve','Helena','Sophia','Enid','The camera']},
+          {key:'speed',type:'select',label:'Turn speed',value:'Natural',options:['Natural','Snap','Slow']}
+        ]}
+      ]},
+      {id:'s3',name:'The greeting',dur:3.4,beats:[
+        {id:'b5',actor:'eve',verb:'say',title:'Say a line',fields:[
+          {key:'who',type:'actor',label:'Who speaks',value:'eve'},
+          {key:'line',type:'text',label:'The line',value:"You came. I wasn't sure the lantern would still be burning.",hint:'Written exactly as the player will hear it.'},
+          {key:'tone',type:'select',label:'Tone',value:'Quiet, relieved',options:['Quiet, relieved','Wary','Warm','Grieving','Urgent']},
+          {key:'wait',type:'toggle',label:'Wait for the player to continue',value:true,hint:'Hold on this line until the player presses continue.'}
+        ]},
+        {id:'b6',actor:'helena',verb:'prop',title:'Raise the lantern',fields:[
+          {key:'who',type:'actor',label:'Who acts',value:'helena'},
+          {key:'action',type:'select',label:'What they do',value:'Raise the lantern',options:['Raise the lantern','Lower the lantern','Hold still']},
+          {key:'height',type:'select',label:'How high',value:'Shoulder height',options:['Waist','Shoulder height','Overhead']}
+        ]}
+      ]}
+    ]
+  };
+
+  lerp(a,b,t){return a+(b-a)*t;}
+  ease(t){t=Math.max(0,Math.min(1,t));return t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+  angle(a,b){return Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI;}
+  fmt(t){t=Math.max(0,t);const s=Math.floor(t+0.0001);return '0:'+String(s).padStart(2,'0');}
+  clone(x){return JSON.parse(JSON.stringify(x));}
+  getBeat(id){for(const s of this.state.steps)for(const b of s.beats)if(b.id===id)return b;return null;}
+  findBeat(steps,id){for(const s of steps)for(const b of s.beats)if(b.id===id)return b;return null;}
+
+  componentWillUnmount(){if(this._raf)cancelAnimationFrame(this._raf);}
+
+  togglePlay=()=>{
+    if(this.state.playing){this.setState({playing:false});if(this._raf)cancelAnimationFrame(this._raf);return;}
+    let t=this.state.currentTime;if(t>=this.TOTAL-0.02)t=0;
+    this.setState({playing:true,currentTime:t});
+    this._last=performance.now();
+    this._raf=requestAnimationFrame(this.tick);
+  };
+  tick=(now)=>{
+    if(!this.state.playing)return;
+    const dt=(now-(this._last||now))/1000;this._last=now;
+    let t=this.state.currentTime+dt;
+    if(t>=this.TOTAL){this.setState({currentTime:this.TOTAL,playing:false});return;}
+    this.setState({currentTime:t});
+    this._raf=requestAnimationFrame(this.tick);
+  };
+  onScrub=(e)=>{if(this._raf)cancelAnimationFrame(this._raf);this.setState({currentTime:parseFloat(e.target.value),playing:false});};
+
+  selectBeat=(e)=>{this.setState({selectedBeatId:e.currentTarget.dataset.beat});};
+  selectStep=(e)=>{this.setState({selectedStep:e.currentTarget.dataset.step});};
+  selectSeq=(e)=>{this.setState({selectedSeq:e.currentTarget.dataset.seq});};
+  selectActor=(e)=>{e.stopPropagation();const id=e.currentTarget.dataset.actor;for(const s of this.state.steps)for(const b of s.beats)if(b.actor===id){this.setState({selectedBeatId:b.id});return;}};
+
+  onStageClick=(e)=>{
+    const sel=this.getBeat(this.state.selectedBeatId);
+    if(!sel||sel.verb!=='walk')return;
+    const r=e.currentTarget.getBoundingClientRect();
+    const x=Math.max(2,Math.min(98,((e.clientX-r.left)/r.width)*100));
+    const y=Math.max(6,Math.min(94,((e.clientY-r.top)/r.height)*100));
+    this.mutate(s=>{const steps=this.clone(s.steps);const b=this.findBeat(steps,sel.id);if(b){const f=b.fields.find(f=>f.key==='to');if(f)f.value='A spot you marked';}return {steps,eveDest:{x:Math.round(x),y:Math.round(y)}};});
+  };
+
+  mutate(producer){
+    this.setState(s=>{
+      const snap=JSON.stringify({steps:s.steps,selectedBeatId:s.selectedBeatId,eveDest:s.eveDest});
+      const patch=producer(s)||{};
+      return Object.assign({},patch,{undo:[...s.undo,snap].slice(-60),redo:[],saved:false});
+    });
+  }
+  undo=()=>{this.setState(s=>{if(!s.undo.length)return null;const cur=JSON.stringify({steps:s.steps,selectedBeatId:s.selectedBeatId,eveDest:s.eveDest});const p=JSON.parse(s.undo[s.undo.length-1]);return {steps:p.steps,selectedBeatId:p.selectedBeatId,eveDest:p.eveDest,undo:s.undo.slice(0,-1),redo:[...s.redo,cur],saved:false};});};
+  redo=()=>{this.setState(s=>{if(!s.redo.length)return null;const cur=JSON.stringify({steps:s.steps,selectedBeatId:s.selectedBeatId,eveDest:s.eveDest});const p=JSON.parse(s.redo[s.redo.length-1]);return {steps:p.steps,selectedBeatId:p.selectedBeatId,eveDest:p.eveDest,redo:s.redo.slice(0,-1),undo:[...s.undo,cur],saved:false};});};
+  save=()=>{this.setState({saved:true});};
+
+  setField(id,key,val){this.mutate(s=>{const steps=this.clone(s.steps);const b=this.findBeat(steps,id);if(b){const f=b.fields.find(f=>f.key===key);if(f)f.value=val;}return {steps};});}
+  onFieldSelect=(e)=>{this.setField(this.state.selectedBeatId,e.target.dataset.key,e.target.value);};
+  onFieldText=(e)=>{this.setField(this.state.selectedBeatId,e.target.dataset.key,e.target.value);};
+  onFieldToggle=(e)=>{const key=e.currentTarget.dataset.key;const b=this.getBeat(this.state.selectedBeatId);const f=b&&b.fields.find(f=>f.key===key);this.setField(this.state.selectedBeatId,key,!(f&&f.value));};
+  onFieldSlider=(e)=>{this.setField(this.state.selectedBeatId,e.target.dataset.key,parseInt(e.target.value));};
+
+  onBeatDragStart=(e)=>{this._dragKind='beat';this._dragBeat=e.currentTarget.dataset.beat;e.stopPropagation();if(e.dataTransfer){e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text','b');}};
+  onBeatDrop=(e)=>{e.preventDefault();e.stopPropagation();if(this._dragKind!=='beat'||!this._dragBeat)return;const targetStep=e.currentTarget.dataset.step;const bid=this._dragBeat;this._dragBeat=null;
+    this.mutate(s=>{const steps=this.clone(s.steps);let moved=null;for(const st of steps){const i=st.beats.findIndex(b=>b.id===bid);if(i>=0){moved=st.beats.splice(i,1)[0];break;}}if(moved){const ts=steps.find(x=>x.id===targetStep);if(ts)ts.beats.push(moved);}return {steps,selectedBeatId:bid};});};
+  onStepDragStart=(e)=>{this._dragKind='step';this._dragStep=e.currentTarget.dataset.step;if(e.dataTransfer){e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text','s');}};
+  onStepDrop=(e)=>{e.preventDefault();if(this._dragKind!=='step'||!this._dragStep)return;const target=e.currentTarget.dataset.step;const src=this._dragStep;this._dragStep=null;if(src===target)return;
+    this.mutate(s=>{const steps=this.clone(s.steps);const si=steps.findIndex(x=>x.id===src);const moved=steps.splice(si,1)[0];const ti=steps.findIndex(x=>x.id===target);steps.splice(ti,0,moved);return {steps};});};
+  onDragOver=(e)=>{e.preventDefault();if(e.dataTransfer)e.dataTransfer.dropEffect='move';};
+
+  addBeat=(e)=>{const stepId=e.currentTarget.dataset.step;this.mutate(s=>{const steps=this.clone(s.steps);const st=steps.find(x=>x.id===stepId);const id='b'+Math.random().toString(36).slice(2,7);if(st)st.beats.push({id,actor:'eve',verb:'walk',title:'Walk in',fields:[{key:'who',type:'actor',label:'Who moves',value:'eve'},{key:'to',type:'destination',label:'Walk to',value:'',hint:'Click anywhere on the stage to place where they stop.'},{key:'speed',type:'select',label:'How fast',value:'Walk',options:['Stroll','Walk','Hurry']}]});return {steps,selectedBeatId:id};});};
+  addStep=()=>{this.mutate(s=>{const steps=this.clone(s.steps);const id='s'+Math.random().toString(36).slice(2,6);steps.push({id,name:'New step',dur:1.5,beats:[]});return {steps,selectedStep:id};});};
+  removeBeat=(e)=>{e.stopPropagation();const bid=e.currentTarget.dataset.beat;this.mutate(s=>{const steps=this.clone(s.steps);for(const st of steps){const i=st.beats.findIndex(b=>b.id===bid);if(i>=0){st.beats.splice(i,1);break;}}return {steps};});};
+  fixIssue=(e)=>{this.setState({selectedBeatId:e.currentTarget.dataset.beat});};
+
+  evePos(t){const d=this.state.eveDest;if(t<=0)return {x:this.ENTRY.x,y:this.ENTRY.y};if(t<2.6){const p=this.ease(t/2.6);return {x:this.lerp(this.ENTRY.x,d.x,p),y:this.lerp(this.ENTRY.y,d.y,p)};}return {x:d.x,y:d.y};}
+  eveFacing(t){const d=this.state.eveDest;const toS=this.angle(d,this.BASE.siegfried);if(t<2.6)return 0;if(t<3.6){const p=this.ease((t-2.6)/1);return this.lerp(0,toS,p);}return toS;}
+  sigFacing(t){const d=this.state.eveDest;const toE=this.angle(this.BASE.siegfried,d);const base=-64;if(t<2.6)return base;if(t<3.6){const p=this.ease((t-2.6)/1);return this.lerp(base,toE,p);}return toE;}
+  camRect(t){const wide={x:5,y:7,w:90,h:86};const lean={x:22,y:23,w:57,h:55};if(t<2.6){const p=this.ease(t/2.6);return {x:this.lerp(wide.x,lean.x,p),y:this.lerp(wide.y,lean.y,p),w:this.lerp(wide.w,lean.w,p),h:this.lerp(wide.h,lean.h,p)};}return lean;}
+  lanternOp(t){return t>=3.6?this.ease(Math.min((t-3.6)/0.6,1)):0;}
+
+  renderVals(){
+    const s=this.state;
+    const gold=this.props.accent||'#d8b268';
+    const atmo=(this.props.atmosphere??62)/100;
+    const t=s.currentTime;
+    const sel=this.getBeat(s.selectedBeatId);
+    const selActor=sel?sel.actor:null;
+
+    let sayLine='';
+    for(const st of s.steps)for(const b of st.beats)if(b.verb==='say'){const f=b.fields.find(f=>f.key==='line');sayLine=f?f.value:'';}
+
+    const ep=this.evePos(t);
+    const eve={id:'eve',name:'Eve',color:this.ACTORS.eve.color,x:ep.x,y:ep.y,facingDeg:this.eveFacing(t),selected:selActor==='eve',speaking:t>=3.6,line:sayLine};
+    const stageActors=[
+      eve,
+      {id:'siegfried',name:'Siegfried',color:this.ACTORS.siegfried.color,x:this.BASE.siegfried.x,y:this.BASE.siegfried.y,facingDeg:this.sigFacing(t),selected:selActor==='siegfried',speaking:false,line:''},
+      {id:'helena',name:'Helena',color:this.ACTORS.helena.color,x:this.BASE.helena.x,y:this.BASE.helena.y,facingDeg:-104,selected:selActor==='helena',speaking:false,line:''},
+      {id:'sophia',name:'Sophia',color:this.ACTORS.sophia.color,x:this.BASE.sophia.x,y:this.BASE.sophia.y,facingDeg:95,selected:selActor==='sophia',speaking:false,line:''},
+      {id:'enid',name:'Enid',color:this.ACTORS.enid.color,x:this.BASE.enid.x,y:this.BASE.enid.y,facingDeg:18,selected:selActor==='enid',speaking:false,line:''}
+    ];
+    const cam=this.camRect(t);
+    const lantern={x:this.BASE.helena.x,y:this.BASE.helena.y,opacity:this.lanternOp(t)*(0.55+atmo*0.45)};
+    const walkSel=!!(sel&&sel.verb==='walk');
+
+    const steps=s.steps.map(st=>({
+      id:st.id,name:st.name,dur:st.dur,durLabel:st.dur.toFixed(1)+'s',
+      headerBorder:st.id===s.selectedStep?gold:'rgba(216,178,104,0.16)',
+      headerBg:st.id===s.selectedStep?'rgba(216,178,104,0.10)':'rgba(255,255,255,0.02)',
+      beats:st.beats.map(b=>{
+        const actor=this.ACTORS[b.actor]||{name:b.actor,color:'#999'};
+        const val=k=>{const f=b.fields.find(f=>f.key===k);return f?f.value:'';};
+        let summary='',isSay=false,incomplete=false;
+        if(b.verb==='walk'){const to=val('to');summary=to||'Choose where they walk';incomplete=!to;}
+        else if(b.verb==='say'){summary='\u201C'+(val('line')||'\u2026')+'\u201D';isSay=true;incomplete=!val('line');}
+        else if(b.verb==='face'){summary='to '+val('toward');}
+        else if(b.verb==='camera'){summary=val('move');}
+        else if(b.verb==='prop'){summary=val('action');}
+        const isSelBeat=b.id===s.selectedBeatId;
+        return {id:b.id,title:b.title,actorName:actor.name,actorColor:actor.color,glyph:this.GLYPH[b.verb]||'\u2022',
+          summary,isSay,notSay:!isSay,summaryColor:incomplete?'#c88a52':'#8a8397',
+          borderColor:isSelBeat?gold:(incomplete?'#c88a52':'rgba(216,178,104,0.14)'),
+          borderStyle:(incomplete&&!isSelBeat)?'dashed':'solid',
+          bg:isSelBeat?'rgba(216,178,104,0.12)':(incomplete?'rgba(200,138,82,0.07)':'rgba(255,255,255,0.025)')};
+      })
+    }));
+
+    let insTitle='',insVerb='',insActorName='',insActorColor='',insGlyph='',fields=[];
+    if(sel){
+      const actor=this.ACTORS[sel.actor]||{name:sel.actor,color:'#999'};
+      insTitle=sel.title;insVerb=this.VERBLBL[sel.verb]||sel.verb;insActorName=actor.name;insActorColor=actor.color;insGlyph=this.GLYPH[sel.verb]||'\u2022';
+      fields=sel.fields.map(f=>{
+        let an='',ac='';
+        if(f.type==='actor'){const a=this.ACTORS[f.value]||{name:f.value,color:'#999'};an=a.name;ac=a.color;}
+        const on=!!f.value;
+        return {key:f.key,label:f.label,value:f.value,hint:f.hint||'',hasHint:!!f.hint,options:f.options||[],
+          isActor:f.type==='actor',isSelect:f.type==='select',isText:f.type==='text',isToggle:f.type==='toggle',isDest:f.type==='destination',isSlider:f.type==='slider',
+          actorName:an,actorColor:ac,
+          toggleOn:on,toggleBg:on?gold:'#2f2a3d',toggleX:on?'20px':'2px',toggleLabel:on?'Yes, wait for them':'No, keep playing',
+          destValue:f.value||'Not chosen yet',destColor:f.value?'#e8e2d6':'#c88a52',destBorder:f.value?'#2f2a3d':'rgba(200,138,82,.5)'};
+      });
+    }
+
+    const sequences=s.sequences.map(q=>{const active=q.id===s.selectedSeq;return {id:q.id,name:q.name,note:q.note,trigger:q.trigger,steps:q.steps,beats:q.beats,chain:q.chain,hasChain:!!q.chain,accent:active?gold:'transparent',cardBg:active?'rgba(216,178,104,0.08)':'rgba(255,255,255,0.02)',cardBorder:active?'rgba(216,178,104,0.32)':'#231f30'};});
+
+    const issues=[];
+    for(const st of s.steps)for(const b of st.beats){
+      const val=k=>{const f=b.fields.find(f=>f.key===k);return f?f.value:'';};
+      const nm=(this.ACTORS[b.actor]||{}).name||b.actor;
+      if(b.verb==='walk'&&!val('to'))issues.push({beat:b.id,msg:nm+' hasn\u2019t been told where to walk.'});
+      if(b.verb==='say'&&!val('line'))issues.push({beat:b.id,msg:nm+' has no line to say yet.'});
+    }
+
+    let acc=0,curStep='';for(const st of s.steps){if(t>=acc&&t<acc+st.dur){curStep=st.name;break;}acc+=st.dur;}
+    if(!curStep&&s.steps.length)curStep=s.steps[s.steps.length-1].name;
+    const pct=(t/this.TOTAL)*100;
+    const totalBeats=s.steps.reduce((n,st)=>n+st.beats.length,0);
+
+    return {
+      gold, fogOpacity:0.2+atmo*0.5,
+      unsaved:!s.saved, saved:s.saved,
+      sequences, steps,
+      stageActors, cam, lantern, walkSel,
+      evePathPoints:this.ENTRY.x+','+this.ENTRY.y+' '+s.eveDest.x+','+s.eveDest.y,
+      destX:s.eveDest.x, destY:s.eveDest.y,
+      destLabel:walkSel?(sel.fields.find(f=>f.key==='to').value||'Not set'):'',
+      playing:s.playing, paused:!s.playing,
+      timeLabel:this.fmt(t), totalLabel:this.fmt(this.TOTAL),
+      currentTime:t, scrubMax:this.TOTAL,
+      scrubFill:'linear-gradient(90deg, '+gold+' '+pct+'%, #3a3550 '+pct+'%)',
+      playheadPct:pct, curStepName:curStep,
+      insTitle,insVerb,insActorName,insActorColor,insGlyph,fields,hasSel:!!sel,selBeatId:s.selectedBeatId,
+      hasIssues:issues.length>0, noIssues:issues.length===0, firstIssue:issues[0]||{msg:'',beat:''},
+      okMsg:'Everything\u2019s set — '+totalBeats+' beats across '+s.steps.length+' steps, ready to play.',
+      undoOpacity:s.undo.length?0.85:0.3, redoOpacity:s.redo.length?0.85:0.3,
+      togglePlay:this.togglePlay, onScrub:this.onScrub,
+      selectBeat:this.selectBeat, selectStep:this.selectStep, selectSeq:this.selectSeq, selectActor:this.selectActor,
+      onStageClick:this.onStageClick, undo:this.undo, redo:this.redo, save:this.save,
+      onFieldSelect:this.onFieldSelect, onFieldText:this.onFieldText, onFieldToggle:this.onFieldToggle, onFieldSlider:this.onFieldSlider,
+      onBeatDragStart:this.onBeatDragStart, onBeatDrop:this.onBeatDrop, onStepDragStart:this.onStepDragStart, onStepDrop:this.onStepDrop, onDragOver:this.onDragOver,
+      addBeat:this.addBeat, addStep:this.addStep, removeBeat:this.removeBeat, fixIssue:this.fixIssue
+    };
+  }
+}
+</script>
+
+
+</body></html>

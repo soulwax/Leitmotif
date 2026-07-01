@@ -44,9 +44,12 @@ export function renderTimeline(
     const col = document.createElement("div");
     col.className = "tl-step";
 
-    // Step header: when + reorder/delete controls.
+    // Step header: grip + when + reorder/delete controls.
     const head = document.createElement("div");
     head.className = "tl-step-head";
+    const grip = document.createElement("span");
+    grip.className = "tl-step-grip";
+    grip.textContent = "⁚⁚";
     const when = step.wait_for ? `wait: ${step.wait_for.kind}` : `${step.duration ?? 0}s`;
     const label = document.createElement("span");
     label.className = "tl-step-label";
@@ -54,7 +57,7 @@ export function renderTimeline(
     const timing = document.createElement("span");
     timing.className = "tl-step-when";
     timing.textContent = when;
-    head.append(label, timing, ctrl("‹", "Move step left", () => cb.moveStep(si, -1)));
+    head.append(grip, label, timing, ctrl("‹", "Move step left", () => cb.moveStep(si, -1)));
     head.append(ctrl("›", "Move step right", () => cb.moveStep(si, +1)));
     head.append(ctrl("✕", "Delete step", () => cb.deleteStep(si)));
     col.appendChild(head);
@@ -88,13 +91,24 @@ export function renderTimeline(
       card.className = "tl-beat" + (isSel ? " selected" : "");
       card.draggable = true;
 
-      const verb = document.createElement("span");
-      verb.className = "tl-beat-verb";
-      verb.textContent = beat.do;
+      const name = beat.actor ?? "echo";
+      const color = actorColor(name);
+      const glyph = document.createElement("span");
+      glyph.className = "tl-beat-glyph";
+      glyph.style.background = color;
+      glyph.textContent = name.charAt(0).toUpperCase();
+      const body = document.createElement("div");
+      body.className = "tl-beat-body";
       const actor = document.createElement("span");
       actor.className = "tl-beat-actor";
-      actor.textContent = beat.actor ?? "echo";
-      card.append(actor, verb);
+      actor.style.color = color;
+      actor.textContent = name;
+      const sep = document.createTextNode(" · ");
+      const verb = document.createElement("span");
+      verb.className = "tl-beat-verb";
+      verb.textContent = beat.do.replace(/_/g, " ");
+      body.append(actor, sep, verb);
+      card.append(glyph, body);
 
       const del = ctrl("✕", "Delete beat", (e) => {
         e.stopPropagation();
@@ -134,6 +148,17 @@ export function renderTimeline(
   addStep.addEventListener("click", () => cb.addStep());
   addStepCol.appendChild(addStep);
   root.appendChild(addStepCol);
+}
+
+/** A stable accent colour per actor, so a writer can track who's who at a glance.
+ * Echo/player get the game's cool teal; everyone else a warm rotation. */
+const ACTOR_COLORS = ["#d8b268", "#c58fd6", "#8fb8d6", "#d69f8f", "#a8d68f", "#d68fb0"];
+function actorColor(name: string): string {
+  const id = name.toLowerCase();
+  if (id === "echo" || id === "player") return "#75f0d6";
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return ACTOR_COLORS[h % ACTOR_COLORS.length];
 }
 
 /** A tiny control button. */

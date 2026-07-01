@@ -79,6 +79,17 @@ roadmap `TODO_CHOREO_GUI.md`.
   tauri:build` produces the `.exe` once real artwork replaces the placeholder
   `icon.ico`. (Signing the installer is a later, machine-specific step.)
 
+- **Design (done):** the **Studio** visual design is live — the app now wears the
+  game's dark-fantasy, lantern-in-fog identity. Three columns (Sequences ·
+  stage-over-timeline · Inspector), Instrument Sans for UI, Newsreader italic for
+  the writer's prose, Space Mono for the technical bits; gold-gradient actions, a
+  foggy radial stage with a live-preview pulse and a "Now" readout, actor-coloured
+  beat glyphs on the timeline, and an autosave validation ribbon. The reference
+  mockup lives in `design/design-reference.html`; the port is a pure re-skin —
+  every logic seam (SceneDoc, timeline, forms, stage, trigger, preview) is
+  unchanged. A dev-only `window.__lmLoad(json)` seam (stripped from production
+  builds) lets the UI be driven headlessly for visual checks.
+
 - **Polish (ongoing):**
   - **Place by pointing** — click the stage to set a selected beat's destination
     (walk_to, teleport_to, walk_in, spawn_*), so a writer never types coordinates.

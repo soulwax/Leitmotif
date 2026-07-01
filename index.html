@@ -8,25 +8,28 @@
   </head>
   <body>
     <header>
-      <div class="titles">
+      <div class="brand">
+        <span class="brand-mark"></span>
         <h1>Leitmotif</h1>
-        <p class="tagline">EchoWarrior scene director</p>
+        <span class="tagline">EchoWarrior scene director</span>
       </div>
       <div class="toolbar">
-        <button id="btn-new">New</button>
-        <button id="btn-open">Open…</button>
-        <button id="btn-save">Save</button>
-        <button id="btn-save-as">Save As…</button>
+        <button id="btn-new" class="small ghost">New</button>
+        <button id="btn-open" class="small ghost">Open…</button>
+        <button id="btn-save" class="small">Save</button>
+        <button id="btn-save-as" class="small ghost">Save As…</button>
         <span class="toolbar-sep"></span>
-        <button id="btn-undo" class="small" title="Undo (Ctrl+Z)" disabled>↶ Undo</button>
-        <button id="btn-redo" class="small" title="Redo (Ctrl+Y)" disabled>↷ Redo</button>
-        <span class="toolbar-sep"></span>
-        <button id="btn-export" class="export">Export to game</button>
+        <button id="btn-undo" class="small ghost" title="Undo (Ctrl+Z)" disabled>↶ Undo</button>
+        <button id="btn-redo" class="small ghost" title="Redo (Ctrl+Y)" disabled>↷ Redo</button>
+        <span class="spacer"></span>
         <span id="doc-name" class="doc-name">— no scene —</span>
+        <span class="toolbar-sep"></span>
+        <button id="btn-export" class="gold">Export to game</button>
       </div>
     </header>
 
     <main>
+      <!-- left: sequences -->
       <section class="panel sequences">
         <div class="panel-head">
           <h2>Sequences</h2>
@@ -35,36 +38,56 @@
         <ul id="sequence-list" class="seq-list">
           <li class="empty">Open a scene to see its sequences.</li>
         </ul>
-        <div class="panel-head validation-head">
-          <h2>Validation</h2>
-          <button id="btn-validate" class="small">Validate</button>
-        </div>
-        <pre id="validation-output" class="output small-output">—</pre>
       </section>
 
-      <section class="panel detail">
-        <div class="panel-head">
-          <h2 id="detail-title">Sequence</h2>
+      <!-- center: stage over transport over timeline -->
+      <section class="center">
+        <div class="stage-wrap">
+          <canvas id="stage" class="stage" width="1120" height="480"></canvas>
+          <div class="stage-pill now"><span>Now</span><b id="stage-now">0.0s</b></div>
+          <div class="stage-pill live"><span class="dot"></span><span>Live preview</span></div>
+          <div id="stage-hint" class="stage-hint"></div>
         </div>
-        <div id="detail-body" class="detail-body">
-          <p class="empty">Select a sequence to see its steps and beats.</p>
-        </div>
-      </section>
 
-      <section class="panel stage-panel">
-        <div class="panel-head">
-          <h2>Preview</h2>
-          <div class="transport">
-            <button id="btn-play" class="small" title="Play / pause">▶</button>
-            <input id="scrub" class="scrub" type="range" min="0" max="1" step="0.01" value="0" />
-            <span id="scrub-time" class="scrub-time">0.0s</span>
-            <button id="btn-refresh-preview" class="small" title="Rebuild preview">↻</button>
+        <div class="transport">
+          <button id="btn-play" class="play" title="Play / pause">▶</button>
+          <span id="scrub-time" class="time">0.0s</span>
+          <input id="scrub" class="scrub" type="range" min="0" max="1" step="0.001" value="0" />
+          <span id="scrub-total" class="time total">0.0s</span>
+          <button id="btn-refresh-preview" class="icon" title="Rebuild preview">↻</button>
+        </div>
+
+        <div class="timeline-panel">
+          <div class="timeline-head">
+            <div class="title">
+              <span id="timeline-name" class="name">Timeline</span>
+              <span class="sub">steps play left → right · beats in a step happen together</span>
+            </div>
+            <span id="timeline-chain" class="chain"></span>
+          </div>
+          <div id="timeline-host" class="timeline-wrap">
+            <p class="empty" style="color: var(--muted); font-size: 12.5px;">
+              Select a sequence to arrange its beats.
+            </p>
           </div>
         </div>
-        <canvas id="stage" class="stage" width="1120" height="360"></canvas>
-        <p id="stage-msg" class="stage-msg">Select a sequence to preview it.</p>
       </section>
+
+      <!-- right: inspector + validation ribbon -->
+      <aside class="inspector-col">
+        <div class="detail-body" id="detail-body">
+          <p class="empty">Select a beat to edit it. Fill only what the action needs.</p>
+        </div>
+        <div class="validation-ribbon">
+          <button id="btn-validate" class="small ghost" title="Validate the scene">✓ Check</button>
+          <pre id="validation-output" class="output">Autosaves as you work.</pre>
+        </div>
+      </aside>
     </main>
+
+    <!-- carried in the center column's timeline header; kept for main.ts messages -->
+    <span id="stage-msg" hidden></span>
+    <span id="detail-title" hidden></span>
 
     <script type="module" src="/src/main.ts"></script>
   </body>
