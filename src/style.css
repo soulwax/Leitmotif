@@ -208,3 +208,111 @@ main {
 .output.error {
   color: var(--error);
 }
+
+.small-output {
+  flex: 0 0 auto;
+  max-height: 140px;
+}
+
+.validation-head {
+  margin-top: 14px;
+}
+
+/* ── detail (steps / beats / inspector) ── */
+
+.detail-body {
+  overflow: auto;
+  flex: 1;
+}
+
+.detail-body .empty {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.step {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  background: var(--panel-2);
+}
+
+.step-head {
+  color: var(--accent);
+  font-size: 12px;
+  margin-bottom: 6px;
+  font-family: "Cascadia Code", "Consolas", monospace;
+}
+
+.beat-chip {
+  display: inline-block;
+  margin: 3px 5px 3px 0;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-family: "Cascadia Code", "Consolas", monospace;
+  background: #221e30;
+}
+
+.beat-chip.selected {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* ── generated beat form ── */
+
+.inspector {
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-top: 8px;
+  background: #191622;
+}
+
+.inspector h3 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--gold);
+}
+
+.beat-form {
+  display: grid;
+  gap: 10px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  align-items: center;
+  gap: 4px 12px;
+}
+
+.form-label {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.form-row input,
+.form-row select {
+  background: #0f0d15;
+  border: 1px solid #34304380;
+  border-radius: 6px;
+  color: var(--ink);
+  padding: 6px 8px;
+  font-size: 13px;
+  min-width: 0;
+}
+
+.form-desc {
+  grid-column: 2 / 3;
+  color: var(--muted);
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.form-none {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: italic;
+  margin: 0;
+}

@@ -32,9 +32,20 @@ roadmap `TODO_CHOREO_GUI.md`.
   tracking). Verified: Rust `cargo check` ✓, TypeScript `tsc` ✓, the
   `choreo convert` JSON matches the document model.
 
-Next: **A2** schema-driven beat inspector, **A3** node-graph editor, **A4** actor
-canvas + live preview, **A5** timeline, **A6** asset browser, **A7** export,
-**A8** packaging.
+- **A2 (done):** select a sequence → see its **steps and beats**, click a beat →
+  edit it in a **schema-driven form**. The form shows only the fields that beat's
+  verb uses, with types/descriptions read from the generated
+  `choreography.schema.json` and enums from a small beat-vocabulary map
+  (`src/vocab.ts`). Edits route through `SceneDoc`. **Finding:** the schema drives
+  field *metadata* well (types, descriptions, and — for triggers/wait_for — whole
+  variant sets), but the engine's free-string beat fields (`do`, `ease`,
+  `direction`, `from`) aren't enumerated in the schema, so a curated vocab map
+  supplies verb→field relevance + those enums. That map could later move into the
+  schema via `schemars` attributes (a cheap game-crate change).
+
+Next: **A3** node-graph editor, **A4** actor canvas + live preview, **A5**
+timeline transport, **A6** asset browser, **A7** export, **A8** packaging. See
+`LEITMOTIV_DESIGN.md` for the visual design brief.
 
 ## Layout
 

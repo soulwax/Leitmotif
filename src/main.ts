@@ -13,7 +13,8 @@ import {
   saveSceneDialog,
   validate,
 } from "./bridge";
-import { SceneDoc, type Sequence } from "./scene";
+import { SceneDoc, type Beat, type Sequence, type Step } from "./scene";
+import { buildBeatForm } from "./form";
 
 function $(id: string): HTMLElement {
   const el = document.getElementById(id);
@@ -25,9 +26,13 @@ const docName = $("doc-name");
 const seqList = $("sequence-list") as HTMLUListElement;
 const seqCount = $("seq-count");
 const validationOut = $("validation-output") as HTMLPreElement;
+const detailTitle = $("detail-title");
+const detailBody = $("detail-body");
 
 let doc: SceneDoc = SceneDoc.empty();
 let selectedSeq: string | null = null;
+/** The beat currently open in the inspector, as [stepIndex, beatIndex]. */
+let selectedBeat: [number, number] | null = null;
 
 // ── rendering ────────────────────────────────────────────────────────────────
 
@@ -75,14 +80,107 @@ function sequenceRow(seq: Sequence): HTMLLIElement {
   }
   li.addEventListener("click", () => {
     selectedSeq = seq.id;
+    selectedBeat = null;
     renderSequences();
+    renderDetail();
   });
   return li;
+}
+
+// ── sequence detail (steps → beats → schema-driven form) ─────────────────────
+
+function renderDetail(): void {
+  detailBody.innerHTML = "";
+  const seq = selectedSeq ? doc.sequence(selectedSeq) : undefined;
+  if (!seq) {
+    detailTitle.textContent = "Sequence";
+    detailBody.appendChild(emptyNote("Select a sequence to see its steps and beats."));
+    return;
+  }
+  detailTitle.textContent = seq.id;
+
+  const steps = seq.step ?? [];
+  steps.forEach((step, si) => detailBody.appendChild(stepBlock(step, si)));
+
+  if (selectedBeat) {
+    detailBody.appendChild(inspector(seq, selectedBeat[0], selectedBeat[1]));
+  }
+}
+
+function stepBlock(step: Step, si: number): HTMLElement {
+  const box = document.createElement("div");
+  box.className = "step";
+  const head = document.createElement("div");
+  head.className = "step-head";
+  const when = step.wait_for
+    ? `wait_for ${step.wait_for.kind}`
+    : `${step.duration ?? 0}s`;
+  head.textContent = `Step ${si + 1} · ${when}`;
+  box.appendChild(head);
+
+  const beats = step.beat ?? [];
+  if (beats.length === 0) {
+    box.appendChild(emptyNote("(no beats)"));
+  }
+  beats.forEach((beat, bi) => {
+    const chip = document.createElement("button");
+    chip.className =
+      "beat-chip" +
+      (selectedBeat && selectedBeat[0] === si && selectedBeat[1] === bi ? " selected" : "");
+    chip.textContent = `${beat.actor ?? "echo"} · ${beat.do}`;
+    chip.addEventListener("click", () => {
+      selectedBeat = [si, bi];
+      renderDetail();
+    });
+    box.appendChild(chip);
+  });
+  return box;
+}
+
+function inspector(seq: Sequence, si: number, bi: number): HTMLElement {
+  const panel = document.createElement("div");
+  panel.className = "inspector";
+  const h = document.createElement("h3");
+  h.textContent = "Beat";
+  panel.appendChild(h);
+
+  const beat = seq.step?.[si]?.beat?.[bi];
+  if (!beat) {
+    panel.appendChild(emptyNote("Beat no longer exists."));
+    return panel;
+  }
+  // Edit a copy; commit through the doc so it owns state + dirty tracking.
+  panel.appendChild(
+    buildBeatForm({ ...beat } as Beat, (next) => {
+      doc.edit((data) => {
+        const target = data.sequence?.[seqIndex(seq.id)]?.step?.[si]?.beat?.[bi];
+        if (target) {
+          for (const k of Object.keys(target)) delete (target as Beat)[k];
+          Object.assign(target, next);
+        }
+      });
+      renderDocName();
+      renderSequences(); // summaries may have changed (e.g. verb count)
+    }),
+  );
+  return panel;
+}
+
+function seqIndex(id: string): number {
+  return doc.sequences().findIndex((s) => s.id === id);
+}
+
+function emptyNote(text: string): HTMLElement {
+  const p = document.createElement("p");
+  p.className = "empty";
+  p.textContent = text;
+  return p;
 }
 
 function renderAll(): void {
   renderDocName();
   renderSequences();
+  renderDetail();
 }
 
 function setValidation(text: string, isError = false): void {
@@ -103,6 +201,7 @@ async function doOpen(): Promise<void> {
   try {
     doc = SceneDoc.fromJson(r.output, path);
     selectedSeq = null;
+    selectedBeat = null;
     renderAll();
     setValidation("—");
     await runValidate(); // give immediate feedback on the opened scene
@@ -141,6 +240,7 @@ function doNew(): void {
   if (doc.isDirty() && !confirm("Discard unsaved changes?")) return;
   doc = SceneDoc.empty();
   selectedSeq = null;
+  selectedBeat = null;
   renderAll();
   setValidation("—");
 }
