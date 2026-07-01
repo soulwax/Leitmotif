@@ -61,6 +61,11 @@ export function schema(): Promise<BridgeResult> {
   return call("choreo_schema", {});
 }
 
+/** Actor + sfx ids from the game data (JSON), for the picker (see `choreo assets`). */
+export function assets(): Promise<BridgeResult> {
+  return call("choreo_assets", {});
+}
+
 /** Convert between TOML and JSON (by output extension). */
 export function convert(input: string, output: string): Promise<BridgeResult> {
   return call("choreo_convert", { input, output });

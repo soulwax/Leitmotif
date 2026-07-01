@@ -5,6 +5,15 @@
 > for, and how it must behave* — not a final pixel spec. Bring your own art
 > direction; this is the brief.
 
+> **The bar (non-negotiable ambition):** Leitmotif must be so intuitive and so
+> *specialised* — purpose-built for directing this game's scenes — that it makes
+> generic "game maker"-style tools look clumsy by comparison. We are aiming to be
+> genuinely more clever than most of that genre: fewer knobs, better defaults,
+> live truthful preview, and an interface that teaches the writer as they use it.
+> Every design decision should be measured against: *"is this the most elegant,
+> least-friction way a non-programmer could direct this moment?"* If a
+> mass-market tool would do it more gracefully, we are not done.
+
 ---
 
 ## One-paragraph brief

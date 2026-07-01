@@ -17,6 +17,7 @@ import { buildBeatForm } from "./form";
 import { renderTimeline } from "./timeline";
 import { drawStage } from "./stage";
 import { type PreviewFrame, duration, fetchTimeline, frameAt } from "./preview";
+import { loadAssets } from "./assets";
 
 function $(id: string): HTMLElement {
   const el = document.getElementById(id);
@@ -393,5 +394,9 @@ window.addEventListener("keydown", (e) => {
     void doOpen();
   }
 });
+
+// Load the game asset catalog (actor/sfx ids) once, then refresh so any open
+// inspector picks up the suggestions. Degrades to free-text if unavailable.
+void loadAssets().then(() => renderDetail());
 
 renderAll();

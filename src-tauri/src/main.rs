@@ -85,6 +85,11 @@ fn choreo_schema() -> Result<String, String> {
 }
 
 #[tauri::command]
+fn choreo_assets() -> Result<String, String> {
+    run_choreo(&["assets"])
+}
+
+#[tauri::command]
 fn choreo_convert(input: String, output: String) -> Result<String, String> {
     run_choreo(&["convert", &input, &output])
 }
@@ -158,6 +163,7 @@ fn main() {
             choreo_validate,
             choreo_preview,
             choreo_schema,
+            choreo_assets,
             choreo_convert,
             load_scene,
             save_scene,

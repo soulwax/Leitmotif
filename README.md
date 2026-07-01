@@ -62,8 +62,16 @@ roadmap `TODO_CHOREO_GUI.md`.
   `choreo preview` → frames pipeline (e.g. Eve enters from off-screen and stops at
   her mark over 138 frames).
 
-Next: **A5** richer transport/timeline sync, **A6** asset browser, **A7** export,
-**A8** packaging. See `LEITMOTIV_DESIGN.md` for the visual design brief.
+- **A6 (done):** **pick ids, never type them.** Actor, target, and sfx fields in
+  the beat form become datalist pickers fed by the game's real data — via a new
+  `choreo assets` command (dumps actor + sfx ids as JSON) surfaced through a
+  `choreo_assets` bridge command and loaded once into an assets store. Writers
+  pick a known id or type a new one (mods may use ids the data doesn't list yet),
+  so scenes stay valid without a writer memorizing ids.
+
+Next: **A5** richer transport/timeline sync, **A7** export, **A8** packaging. See
+`LEITMOTIV_DESIGN.md` for the visual design brief (and the bar we hold ourselves
+to). See also `TODO_CHOREO_GUI.md` in the game repo for the roadmap.
 
 ## Layout
 

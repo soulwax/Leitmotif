@@ -12,7 +12,16 @@
 
 import { fieldMeta } from "./schema";
 import { FIELD_ENUMS, fieldsForVerb, verbNames } from "./vocab";
+import { actorIds, sfxIds } from "./assets";
 import type { Beat } from "./scene";
+
+/** Suggested id values for a field (from the game asset catalog), or [] for none.
+ * These back a datalist so the writer can pick OR type (mods may use new ids). */
+function suggestionsFor(verb: string, field: string): string[] {
+  if (field === "actor" || field === "target") return actorIds();
+  if (field === "id" && (verb === "play_sfx" || verb === "spawn_fx")) return sfxIds();
+  return [];
+}
 
 /** Build an editable form for `beat`. `onChange` fires after any edit with the
  * updated beat (a fresh object). */
@@ -22,11 +31,20 @@ export function buildBeatForm(beat: Beat, onChange: (next: Beat) => void): HTMLE
 
   const emit = (): void => onChange({ ...beat });
 
-  // actor + verb are always shown.
-  root.appendChild(textRow("actor", "Actor", beat.actor ?? "echo", (v) => {
-    beat.actor = v;
-    emit();
-  }, "Which actor this beat targets — echo, world, or a character id."));
+  // actor + verb are always shown. Actor is a datalist (pick a known id or type).
+  root.appendChild(
+    suggestRow(
+      "actor",
+      "Actor",
+      beat.actor ?? "echo",
+      actorIds(),
+      (v) => {
+        beat.actor = v;
+        emit();
+      },
+      "Which actor this beat targets — echo, world, or a character id.",
+    ),
+  );
 
   root.appendChild(
     selectRow("do", "Do (verb)", beat.do, verbNames(), (v) => {
@@ -49,18 +67,36 @@ export function buildBeatForm(beat: Beat, onChange: (next: Beat) => void): HTMLE
   }
 
   for (const field of fields) {
-    root.appendChild(fieldRow(beat, field, emit));
+    root.appendChild(fieldRow(beat, beat.do, field, emit));
   }
   return root;
 }
 
 /** Render one field, choosing input type from the schema + vocab enums. */
-function fieldRow(beat: Beat, field: string, emit: () => void): HTMLElement {
+function fieldRow(beat: Beat, verb: string, field: string, emit: () => void): HTMLElement {
   const meta = fieldMeta("BeatDef", field);
   const enumValues = FIELD_ENUMS[field] ?? meta.enumValues;
   const label = titleCase(field);
   const desc = meta.description || enumHint(field);
   const current = beat[field];
+
+  // Id fields (actor/target/sfx) become datalist pickers when the catalog has
+  // suggestions — pick a known id or type a new one.
+  const suggestions = suggestionsFor(verb, field);
+  if (suggestions.length > 0) {
+    return suggestRow(
+      field,
+      label,
+      typeof current === "string" ? current : "",
+      suggestions,
+      (v) => {
+        if (v === "") delete beat[field];
+        else beat[field] = v;
+        emit();
+      },
+      desc,
+    );
+  }
 
   if (enumValues.length > 0) {
     return selectRow(
@@ -163,6 +199,36 @@ function selectRow(
   }
   sel.addEventListener("change", () => onChange(sel.value));
   return row(id, label, sel, desc);
+}
+
+/** A text input backed by a datalist of `suggestions` — the writer picks a known
+ * id or types a new one (mods may reference ids the game data doesn't list yet). */
+function suggestRow(
+  id: string,
+  label: string,
+  value: string,
+  suggestions: string[],
+  onInput: (v: string) => void,
+  desc: string,
+): HTMLElement {
+  const input = document.createElement("input");
+  input.id = `f-${id}`;
+  input.type = "text";
+  input.value = value;
+  input.setAttribute("list", `dl-${id}`);
+  input.autocomplete = "off";
+  input.addEventListener("input", () => onInput(input.value.trim()));
+
+  const dl = document.createElement("datalist");
+  dl.id = `dl-${id}`;
+  for (const s of suggestions) {
+    const opt = document.createElement("option");
+    opt.value = s;
+    dl.appendChild(opt);
+  }
+  const wrap = row(id, label, input, desc);
+  wrap.appendChild(dl);
+  return wrap;
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────
