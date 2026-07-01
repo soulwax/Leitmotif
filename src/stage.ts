@@ -52,6 +52,32 @@ function wy(y: number, f: Fit): number {
   return f.oy + (WORLD.h - y) * f.scale;
 }
 
+/** Map a browser click on the canvas to a world point (the inverse of the draw
+ * math), so a writer places targets by pointing instead of typing coordinates.
+ * Accounts for the CSS display size vs. the canvas's intrinsic pixel size, and
+ * clamps to the arena. Returns integer world coords. */
+export function screenToWorld(
+  canvas: HTMLCanvasElement,
+  clientX: number,
+  clientY: number,
+): { x: number; y: number } {
+  const rect = canvas.getBoundingClientRect();
+  // CSS pixels → canvas pixels.
+  const px = ((clientX - rect.left) / rect.width) * canvas.width;
+  const py = ((clientY - rect.top) / rect.height) * canvas.height;
+  const f = fitWorld(canvas);
+  const worldX = (px - f.ox) / f.scale;
+  const worldY = WORLD.h - (py - f.oy) / f.scale; // invert Y (Y-up world)
+  return {
+    x: Math.round(clamp(worldX, 0, WORLD.w)),
+    y: Math.round(clamp(worldY, 0, WORLD.h)),
+  };
+}
+
+function clamp(v: number, lo: number, hi: number): number {
+  return v < lo ? lo : v > hi ? hi : v;
+}
+
 /** Draw a frame onto the stage: a foggy field, the camera frame, and the actors.
  * The look echoes the game — warm intent (gold actors) in cool air (blue-grey
  * fog) — so the preview reads as a *scene*, not a scatter of dots. */

@@ -79,6 +79,13 @@ roadmap `TODO_CHOREO_GUI.md`.
   tauri:build` produces the `.exe` once real artwork replaces the placeholder
   `icon.ico`. (Signing the installer is a later, machine-specific step.)
 
+- **Polish (ongoing):**
+  - **Place by pointing** — click the stage to set a selected beat's destination
+    (walk_to, teleport_to, walk_in, spawn_*), so a writer never types coordinates.
+    The cursor turns to a crosshair when a placeable beat is selected.
+  - **Undo / redo** — `Ctrl+Z` / `Ctrl+Y` (and toolbar buttons), history recorded
+    at the single `SceneDoc.edit` seam, so every structural change is reversible.
+
 Remaining polish lives in `LEITMOTIV_DESIGN.md` (the visual design brief and the
 bar we hold ourselves to) and `TODO_CHOREO_GUI.md` in the game repo (the roadmap).
 

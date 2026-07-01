@@ -42,6 +42,9 @@ export class SceneDoc {
   private data: ChoreographyScene;
   path: string | null;
   private clean: string; // serialized snapshot at last load/save, for dirty check
+  private undoStack: string[] = []; // JSON snapshots before each edit
+  private redoStack: string[] = [];
+  private static readonly HISTORY_LIMIT = 100;
 
   private constructor(data: ChoreographyScene, path: string | null) {
     this.data = data;
@@ -86,9 +89,43 @@ export class SceneDoc {
   }
 
   /** Mutate the scene through a callback, keeping the model the one owner of state.
-   * All structured edits below funnel through here, so undo has one seam. */
+   * All structured edits below funnel through here — so this is also the single
+   * place history is recorded. Each edit snapshots the prior state for undo and
+   * invalidates the redo stack. */
   edit(mut: (data: ChoreographyScene) => void): void {
+    const before = JSON.stringify(this.data);
     mut(this.data);
+    // Only record if the edit actually changed something.
+    if (JSON.stringify(this.data) !== before) {
+      this.undoStack.push(before);
+      if (this.undoStack.length > SceneDoc.HISTORY_LIMIT) this.undoStack.shift();
+      this.redoStack.length = 0;
+    }
+  }
+
+  canUndo(): boolean {
+    return this.undoStack.length > 0;
+  }
+  canRedo(): boolean {
+    return this.redoStack.length > 0;
+  }
+
+  /** Restore the previous state. Returns true if it undid something. */
+  undo(): boolean {
+    const prev = this.undoStack.pop();
+    if (prev === undefined) return false;
+    this.redoStack.push(JSON.stringify(this.data));
+    this.data = JSON.parse(prev) as ChoreographyScene;
+    return true;
+  }
+
+  /** Re-apply the last undone state. Returns true if it redid something. */
+  redo(): boolean {
+    const next = this.redoStack.pop();
+    if (next === undefined) return false;
+    this.undoStack.push(JSON.stringify(this.data));
+    this.data = JSON.parse(next) as ChoreographyScene;
+    return true;
   }
 
   private steps(seqId: string): Step[] | undefined {

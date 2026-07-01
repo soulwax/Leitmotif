@@ -16,9 +16,10 @@ import {
 import { SceneDoc, type Beat, type Sequence } from "./scene";
 import { buildBeatForm } from "./form";
 import { renderTimeline } from "./timeline";
-import { drawStage } from "./stage";
+import { drawStage, screenToWorld } from "./stage";
 import { type PreviewFrame, duration, fetchTimeline, frameAt } from "./preview";
 import { loadAssets } from "./assets";
+import { verbTakesWorldPoint } from "./vocab";
 
 function $(id: string): HTMLElement {
   const el = document.getElementById(id);
@@ -38,6 +39,8 @@ const stageMsg = $("stage-msg");
 const scrub = $("scrub") as HTMLInputElement;
 const scrubTime = $("scrub-time");
 const btnPlay = $("btn-play") as HTMLButtonElement;
+const btnUndo = $("btn-undo") as HTMLButtonElement;
+const btnRedo = $("btn-redo") as HTMLButtonElement;
 
 let doc: SceneDoc = SceneDoc.empty();
 let selectedSeq: string | null = null;
@@ -58,6 +61,8 @@ function renderDocName(): void {
   const name = doc.path ? doc.path.replace(/^.*[\\/]/, "") : "untitled";
   docName.textContent = `${name}${doc.isDirty() ? " •" : ""}`;
   docName.title = doc.path ?? "unsaved scene";
+  btnUndo.disabled = !doc.canUndo();
+  btnRedo.disabled = !doc.canRedo();
 }
 
 function renderSequences(): void {
@@ -278,6 +283,46 @@ function drawAt(t: number): void {
   drawStage(stageCanvas, frameAt(frames, t));
 }
 
+/** The currently-selected beat, or null. */
+function currentBeat(): Beat | null {
+  if (!selectedSeq || !selectedBeat) return null;
+  return doc.sequence(selectedSeq)?.step?.[selectedBeat[0]]?.beat?.[selectedBeat[1]] ?? null;
+}
+
+/** Whether clicking the stage would set a destination right now. */
+function canPlaceOnStage(): boolean {
+  const b = currentBeat();
+  return !!b && verbTakesWorldPoint(b.do);
+}
+
+/** Set the selected placeable beat's x/y from a stage click. Returns true if it
+ * placed. */
+function placeSelectedBeatAt(clientX: number, clientY: number): boolean {
+  if (!selectedSeq || !selectedBeat) return false;
+  const b = currentBeat();
+  if (!b || !verbTakesWorldPoint(b.do)) return false;
+  const { x, y } = screenToWorld(stageCanvas, clientX, clientY);
+  const [si, bi] = selectedBeat;
+  const next: Beat = { ...b, x, y };
+  // walk_in to a fixed point means dropping any actor-standoff target.
+  if (b.do === "walk_in") delete next.target;
+  doc.replaceBeat(selectedSeq, si, bi, next);
+  renderDocName();
+  renderSequences();
+  renderDetail();
+  void rebuildPreview();
+  return true;
+}
+
+/** Nudge the writer toward the interaction when they click with nothing placeable. */
+function hintPlaceable(): void {
+  if (!selectedSeq) {
+    stageMsg.textContent = "Select a sequence, then a beat, to place it on the stage.";
+  } else if (!selectedBeat) {
+    stageMsg.textContent = "Select a beat (e.g. Walk to) then click the stage to place it.";
+  }
+}
+
 function togglePlay(): void {
   if (playing) stopPlaying();
   else startPlaying();
@@ -392,6 +437,8 @@ $("btn-save").addEventListener("click", () => void doSave(false));
 $("btn-save-as").addEventListener("click", () => void doSave(true));
 $("btn-export").addEventListener("click", () => void doExport());
 $("btn-validate").addEventListener("click", () => void runValidate());
+btnUndo.addEventListener("click", doUndo);
+btnRedo.addEventListener("click", doRedo);
 
 // transport
 btnPlay.addEventListener("click", togglePlay);
@@ -401,15 +448,64 @@ scrub.addEventListener("input", () => {
   drawAt(Number(scrub.value));
 });
 
+// Place-by-pointing: click the stage to set the selected beat's destination,
+// so a writer never types coordinates. Only active for beats that carry a world
+// point (walk_to, teleport_to, …).
+stageCanvas.addEventListener("click", (e) => {
+  const placed = placeSelectedBeatAt(e.clientX, e.clientY);
+  if (placed) return;
+  hintPlaceable();
+});
+stageCanvas.addEventListener("mousemove", (e) => {
+  stageCanvas.style.cursor = canPlaceOnStage() ? "crosshair" : "default";
+  void e;
+});
+
 window.addEventListener("keydown", (e) => {
-  if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+  const mod = e.ctrlKey || e.metaKey;
+  if (mod && e.key === "s") {
     e.preventDefault();
     void doSave(e.shiftKey);
-  } else if ((e.ctrlKey || e.metaKey) && e.key === "o") {
+  } else if (mod && e.key === "o") {
     e.preventDefault();
     void doOpen();
+  } else if (mod && !e.shiftKey && e.key.toLowerCase() === "z") {
+    e.preventDefault();
+    doUndo();
+  } else if (mod && (e.key.toLowerCase() === "y" || (e.shiftKey && e.key.toLowerCase() === "z"))) {
+    e.preventDefault();
+    doRedo();
   }
 });
+
+function doUndo(): void {
+  if (!doc.undo()) return;
+  ensureValidSelection();
+  afterHistory("Undid the last change.");
+}
+
+function doRedo(): void {
+  if (!doc.redo()) return;
+  ensureValidSelection();
+  afterHistory("Redid the change.");
+}
+
+/** After undo/redo the selection may point at a beat that no longer exists;
+ * clear it if so. */
+function ensureValidSelection(): void {
+  if (selectedSeq && !doc.sequence(selectedSeq)) {
+    selectedSeq = null;
+    selectedBeat = null;
+  } else if (selectedBeat && !currentBeat()) {
+    selectedBeat = null;
+  }
+}
+
+function afterHistory(msg: string): void {
+  renderAll();
+  void rebuildPreview();
+  setValidation(msg);
+}
 
 // Load the game asset catalog (actor/sfx ids) once, then refresh so any open
 // inspector picks up the suggestions. Degrades to free-text if unavailable.

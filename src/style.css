@@ -67,6 +67,23 @@ header {
   font-family: "Cascadia Code", "Consolas", monospace;
 }
 
+.toolbar-sep {
+  width: 1px;
+  height: 20px;
+  background: var(--line);
+  margin: 0 4px;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+button:disabled:hover {
+  border-color: #3a3550;
+  color: var(--ink);
+}
+
 /* ── buttons ── */
 
 button {

@@ -92,3 +92,17 @@ export function verbNames(): string[] {
 export function fieldsForVerb(verb: string): string[] {
   return BEAT_VERBS[verb]?.fields ?? [];
 }
+
+/** Verbs whose x/y can be set by clicking a point on the stage (place-by-pointing).
+ * These are the beats that carry a world destination. */
+const PLACEABLE = new Set([
+  "walk_to",
+  "walk_in",
+  "teleport_to",
+  "spawn_fx",
+  "spawn_enemy",
+]);
+
+export function verbTakesWorldPoint(verb: string): boolean {
+  return PLACEABLE.has(verb);
+}
