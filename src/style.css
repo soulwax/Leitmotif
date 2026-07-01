@@ -482,3 +482,47 @@ main {
   margin-top: 6px;
   width: 100%;
 }
+
+/* ── stage / preview ── */
+
+.stage-panel {
+  grid-column: 1 / -1;
+}
+
+.transport {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  margin-left: 16px;
+}
+
+.scrub {
+  flex: 1;
+  accent-color: var(--gold);
+}
+
+.scrub-time {
+  color: var(--muted);
+  font-size: 12px;
+  font-family: "Cascadia Code", "Consolas", monospace;
+  min-width: 44px;
+  text-align: right;
+}
+
+.stage {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  background: #0f0d15;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: block;
+}
+
+.stage-msg {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 8px 0 0;
+  font-family: "Cascadia Code", "Consolas", monospace;
+}

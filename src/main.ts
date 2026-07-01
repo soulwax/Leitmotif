@@ -15,6 +15,8 @@ import {
 import { SceneDoc, type Beat, type Sequence } from "./scene";
 import { buildBeatForm } from "./form";
 import { renderTimeline } from "./timeline";
+import { drawStage } from "./stage";
+import { type PreviewFrame, duration, fetchTimeline, frameAt } from "./preview";
 
 function $(id: string): HTMLElement {
   const el = document.getElementById(id);
@@ -29,10 +31,24 @@ const validationOut = $("validation-output") as HTMLPreElement;
 const detailTitle = $("detail-title");
 const detailBody = $("detail-body");
 
+const stageCanvas = $("stage") as HTMLCanvasElement;
+const stageMsg = $("stage-msg");
+const scrub = $("scrub") as HTMLInputElement;
+const scrubTime = $("scrub-time");
+const btnPlay = $("btn-play") as HTMLButtonElement;
+
 let doc: SceneDoc = SceneDoc.empty();
 let selectedSeq: string | null = null;
 /** The beat currently open in the inspector, as [stepIndex, beatIndex]. */
 let selectedBeat: [number, number] | null = null;
+
+// ── preview / transport state ────────────────────────────────────────────────
+let frames: PreviewFrame[] = [];
+let playing = false;
+let playT = 0;
+let lastRaf = 0;
+/** Bumps each rebuild so a stale async preview result is ignored. */
+let previewToken = 0;
 
 // ── rendering ────────────────────────────────────────────────────────────────
 
@@ -97,6 +113,7 @@ function sequenceRow(seq: Sequence): HTMLLIElement {
     selectedBeat = null;
     renderSequences();
     renderDetail();
+    void rebuildPreview();
   });
   return li;
 }
@@ -165,11 +182,12 @@ function renderDetail(): void {
   }
 }
 
-/** After any structural edit, refresh the detail + list + dirty flag. */
+/** After any structural edit, refresh the detail + list + dirty flag + preview. */
 function afterStructuralEdit(): void {
   renderDocName();
   renderSequences();
   renderDetail();
+  void rebuildPreview();
 }
 
 function inspector(seq: Sequence, si: number, bi: number): HTMLElement {
@@ -192,6 +210,7 @@ function inspector(seq: Sequence, si: number, bi: number): HTMLElement {
       renderDocName();
       renderSequences();
       renderDetail();
+      void rebuildPreview();
     }),
   );
   return panel;
@@ -215,6 +234,81 @@ function setValidation(text: string, isError = false): void {
   validationOut.classList.toggle("error", isError);
 }
 
+// ── live preview + transport ─────────────────────────────────────────────────
+
+/** Rebuild the preview timeline for the selected sequence from the current
+ * (unsaved) scene. Ignores stale async results via a token. */
+async function rebuildPreview(): Promise<void> {
+  const token = ++previewToken;
+  stopPlaying();
+  frames = [];
+  playT = 0;
+  if (!selectedSeq) {
+    stageMsg.textContent = "Select a sequence to preview it.";
+    drawStage(stageCanvas, null);
+    return;
+  }
+  stageMsg.textContent = "Building preview…";
+  const res = await fetchTimeline(doc.toJson(), selectedSeq, 30, 8);
+  if (token !== previewToken) return; // superseded by a newer rebuild
+  if (!res.ok) {
+    stageMsg.textContent = res.error ?? "preview failed";
+    drawStage(stageCanvas, null);
+    return;
+  }
+  frames = res.frames;
+  const dur = duration(frames);
+  scrub.max = String(Math.max(dur, 0.001));
+  scrub.value = "0";
+  stageMsg.textContent =
+    frames.length <= 2
+      ? `Sequence '${selectedSeq}' produced no motion.`
+      : `${frames.length} frames · ${dur.toFixed(1)}s`;
+  drawAt(0);
+}
+
+function drawAt(t: number): void {
+  playT = t;
+  scrub.value = String(t);
+  scrubTime.textContent = `${t.toFixed(1)}s`;
+  drawStage(stageCanvas, frameAt(frames, t));
+}
+
+function togglePlay(): void {
+  if (playing) stopPlaying();
+  else startPlaying();
+}
+
+function startPlaying(): void {
+  if (frames.length < 2) return;
+  playing = true;
+  btnPlay.textContent = "⏸";
+  if (playT >= duration(frames)) playT = 0;
+  lastRaf = performance.now();
+  requestAnimationFrame(tick);
+}
+
+function stopPlaying(): void {
+  playing = false;
+  btnPlay.textContent = "▶";
+}
+
+function tick(now: number): void {
+  if (!playing) return;
+  const dt = (now - lastRaf) / 1000;
+  lastRaf = now;
+  let t = playT + dt;
+  const dur = duration(frames);
+  if (t >= dur) {
+    t = dur;
+    drawAt(t);
+    stopPlaying();
+    return;
+  }
+  drawAt(t);
+  requestAnimationFrame(tick);
+}
+
 // ── actions ──────────────────────────────────────────────────────────────────
 
 async function doOpen(): Promise<void> {
@@ -230,6 +324,7 @@ async function doOpen(): Promise<void> {
     selectedSeq = null;
     selectedBeat = null;
     renderAll();
+    void rebuildPreview();
     setValidation("—");
     await runValidate(); // give immediate feedback on the opened scene
   } catch (e) {
@@ -269,6 +364,7 @@ function doNew(): void {
   selectedSeq = null;
   selectedBeat = null;
   renderAll();
+  void rebuildPreview();
   setValidation("—");
 }
 
@@ -279,6 +375,14 @@ $("btn-open").addEventListener("click", () => void doOpen());
 $("btn-save").addEventListener("click", () => void doSave(false));
 $("btn-save-as").addEventListener("click", () => void doSave(true));
 $("btn-validate").addEventListener("click", () => void runValidate());
+
+// transport
+btnPlay.addEventListener("click", togglePlay);
+$("btn-refresh-preview").addEventListener("click", () => void rebuildPreview());
+scrub.addEventListener("input", () => {
+  stopPlaying();
+  drawAt(Number(scrub.value));
+});
 
 window.addEventListener("keydown", (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key === "s") {

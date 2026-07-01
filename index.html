@@ -45,6 +45,20 @@
           <p class="empty">Select a sequence to see its steps and beats.</p>
         </div>
       </section>
+
+      <section class="panel stage-panel">
+        <div class="panel-head">
+          <h2>Preview</h2>
+          <div class="transport">
+            <button id="btn-play" class="small" title="Play / pause">▶</button>
+            <input id="scrub" class="scrub" type="range" min="0" max="1" step="0.01" value="0" />
+            <span id="scrub-time" class="scrub-time">0.0s</span>
+            <button id="btn-refresh-preview" class="small" title="Rebuild preview">↻</button>
+          </div>
+        </div>
+        <canvas id="stage" class="stage" width="1120" height="360"></canvas>
+        <p id="stage-msg" class="stage-msg">Select a sequence to preview it.</p>
+      </section>
     </main>
 
     <script type="module" src="/src/main.ts"></script>

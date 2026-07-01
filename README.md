@@ -51,9 +51,19 @@ roadmap `TODO_CHOREO_GUI.md`.
   mutations go through structured `SceneDoc` ops (add/remove/move step + beat), so
   the model stays the single owner of state (and the one seam for undo, A-later).
 
-Next: **A4** actor canvas + live preview, **A5** timeline transport, **A6** asset
-browser, **A7** export, **A8** packaging. See `LEITMOTIV_DESIGN.md` for the visual
-design brief.
+- **A4 (done):** the **live preview** — a 2D stage canvas that renders the
+  selected sequence and a **transport** (play / scrub / rebuild). Actors appear as
+  labelled markers with facing arrows, walk hints, visibility, and the camera
+  frame pans/zooms — all from the game's own headless `scene_preview` (via a new
+  `preview_scene` bridge command that runs `choreo preview` on the *current,
+  possibly unsaved* scene). Editing a beat rebuilds the preview. This is the
+  keystone: **what the writer sees is what the game plays**, with no game engine
+  embedded. Verified: `tsc` ✓, `cargo check` ✓, and the JSON-scene →
+  `choreo preview` → frames pipeline (e.g. Eve enters from off-screen and stops at
+  her mark over 138 frames).
+
+Next: **A5** richer transport/timeline sync, **A6** asset browser, **A7** export,
+**A8** packaging. See `LEITMOTIV_DESIGN.md` for the visual design brief.
 
 ## Layout
 

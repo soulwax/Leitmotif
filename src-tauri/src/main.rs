@@ -125,6 +125,32 @@ fn save_scene(path: String, json: String) -> Result<String, String> {
     result.map(|_| format!("saved {path}"))
 }
 
+/// Preview the *current* (possibly unsaved) editor scene: stage the JSON to a
+/// temp file and run `choreo preview` on it, returning the ScenePreviewFrame JSON
+/// timeline. This lets the stage reflect live edits without a save.
+#[tauri::command]
+fn preview_scene(
+    json: String,
+    sequence: String,
+    fps: f32,
+    seconds: f32,
+) -> Result<String, String> {
+    let tmp = temp_path("json");
+    let tmp_str = tmp.to_string_lossy().into_owned();
+    std::fs::write(&tmp, &json).map_err(|e| format!("stage scene for preview: {e}"))?;
+    let result = run_choreo(&[
+        "preview",
+        &tmp_str,
+        &sequence,
+        "--fps",
+        &fps.to_string(),
+        "--seconds",
+        &seconds.to_string(),
+    ]);
+    let _ = std::fs::remove_file(&tmp);
+    result
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
@@ -135,6 +161,7 @@ fn main() {
             choreo_convert,
             load_scene,
             save_scene,
+            preview_scene,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Leitmotif");

@@ -76,6 +76,17 @@ export function saveScene(path: string, json: string): Promise<BridgeResult> {
   return call("save_scene", { path, json });
 }
 
+/** Preview the current (possibly unsaved) scene JSON: returns a JSON timeline of
+ * ScenePreviewFrames for `sequence`. */
+export function previewScene(
+  json: string,
+  sequence: string,
+  fps = 30,
+  seconds = 8,
+): Promise<BridgeResult> {
+  return call("preview_scene", { json, sequence, fps, seconds });
+}
+
 // ── native file dialogs (Tauri dialog plugin) ────────────────────────────────
 
 const SCENE_FILTERS = [{ name: "Choreography scene", extensions: ["toml", "json"] }];
