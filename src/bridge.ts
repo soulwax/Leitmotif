@@ -81,6 +81,12 @@ export function saveScene(path: string, json: string): Promise<BridgeResult> {
   return call("save_scene", { path, json });
 }
 
+/** Export to the game: validates first, then writes. Refuses to write an invalid
+ * scene (the returned error carries the human findings). */
+export function exportScene(path: string, json: string): Promise<BridgeResult> {
+  return call("export_scene", { path, json });
+}
+
 /** Preview the current (possibly unsaved) scene JSON: returns a JSON timeline of
  * ScenePreviewFrames for `sequence`. */
 export function previewScene(

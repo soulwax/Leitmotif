@@ -6,6 +6,7 @@
 // path to the game's `choreo` CLI).
 
 import {
+  exportScene,
   loadScene,
   openSceneDialog,
   saveScene,
@@ -359,6 +360,18 @@ async function runValidate(): Promise<void> {
   setValidation(r.output, !r.ok);
 }
 
+/** Publish the scene to the game: validate, then (only if clean) write the .toml
+ * the game reads. Never writes an invalid scene. */
+async function doExport(): Promise<void> {
+  const target = await saveSceneDialog(
+    doc.path?.replace(/\.json$/i, ".toml") ?? "choreography.toml",
+  );
+  if (!target) return;
+  setValidation("Exporting to the game…");
+  const r = await exportScene(target, doc.toJson());
+  setValidation(r.output, !r.ok);
+}
+
 function doNew(): void {
   if (doc.isDirty() && !confirm("Discard unsaved changes?")) return;
   doc = SceneDoc.empty();
@@ -375,6 +388,7 @@ $("btn-new").addEventListener("click", doNew);
 $("btn-open").addEventListener("click", () => void doOpen());
 $("btn-save").addEventListener("click", () => void doSave(false));
 $("btn-save-as").addEventListener("click", () => void doSave(true));
+$("btn-export").addEventListener("click", () => void doExport());
 $("btn-validate").addEventListener("click", () => void runValidate());
 
 // transport

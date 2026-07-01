@@ -27,6 +27,11 @@
   "bundle": {
     "active": true,
     "targets": ["nsis"],
-    "icon": ["icons/icon.ico"]
+    "icon": ["icons/icon.ico"],
+    "publisher": "soulwax",
+    "copyright": "© 2026 soulwax",
+    "category": "DeveloperTool",
+    "shortDescription": "EchoWarrior scene director",
+    "longDescription": "Leitmotif — a scene director for EchoWarrior. Compose cinematic sequences on a timeline and watch a live preview, no code required."
   }
 }

@@ -89,6 +89,18 @@ button.small {
   font-size: 12px;
 }
 
+/* The culminating action wears the gold. */
+button.export {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: #2a2233;
+}
+
+button.export:hover {
+  background: var(--gold);
+  color: #14121a;
+}
+
 /* ── main layout ── */
 
 main {

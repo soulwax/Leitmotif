@@ -69,9 +69,32 @@ roadmap `TODO_CHOREO_GUI.md`.
   pick a known id or type a new one (mods may use ids the data doesn't list yet),
   so scenes stay valid without a writer memorizing ids.
 
-Next: **A5** richer transport/timeline sync, **A7** export, **A8** packaging. See
-`LEITMOTIV_DESIGN.md` for the visual design brief (and the bar we hold ourselves
-to). See also `TODO_CHOREO_GUI.md` in the game repo for the roadmap.
+- **A7 (done):** **Export to game** — the culminating act. One gold button
+  validates the scene and, *only if it's clean*, writes the `choreography.toml`
+  the game reads. An invalid scene is refused with human-readable findings and
+  nothing is written, so the editor can never break the running game. This closes
+  the loop: author in Leitmotif → export → the game plays it.
+- **A8 (groundwork):** packaging is configured — `tauri.conf.json` builds an NSIS
+  Windows installer with product identity, publisher, and description. `npm run
+  tauri:build` produces the `.exe` once real artwork replaces the placeholder
+  `icon.ico`. (Signing the installer is a later, machine-specific step.)
+
+Remaining polish lives in `LEITMOTIV_DESIGN.md` (the visual design brief and the
+bar we hold ourselves to) and `TODO_CHOREO_GUI.md` in the game repo (the roadmap).
+
+## Build & run
+
+```bash
+npm install
+# Dev (opens the window; needs the choreo binary on PATH or CHOREO_BIN set):
+CHOREO_BIN=../../target/debug/choreo.exe npm run tauri:dev
+# Package a Windows installer:
+npm run tauri:build
+```
+
+Leitmotif needs the game's `choreo` binary at runtime — build it once in the game
+repo with `cargo build --bin choreo`, then point `CHOREO_BIN` at it (or put it on
+`PATH`).
 
 ## Layout
 
