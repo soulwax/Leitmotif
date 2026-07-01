@@ -2,7 +2,37 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Leitmotif: debug (Rust shell + dev server)",
+      "name": "▶ Leitmotif (dev)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run tauri:dev",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "CHOREO_BIN": "${workspaceFolder}/../../target/debug/choreo.exe"
+      },
+      "preLaunchTask": "leitmotif: build choreo (dependency)",
+      "presentation": {
+        "group": "leitmotif",
+        "order": 1
+      }
+    },
+    {
+      "name": "▶ Leitmotif (release exe)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "\"${workspaceFolder}/src-tauri/target/release/leitmotif.exe\"",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "CHOREO_BIN": "${workspaceFolder}/../../target/debug/choreo.exe"
+      },
+      "preLaunchTask": "leitmotif: build choreo (dependency)",
+      "presentation": {
+        "group": "leitmotif",
+        "order": 2
+      }
+    },
+    {
+      "name": "Leitmotif: debug Rust shell (LLDB)",
       "type": "lldb",
       "request": "launch",
       "cargo": {
@@ -17,11 +47,11 @@
       "sourceLanguages": ["rust"],
       "presentation": {
         "group": "leitmotif",
-        "order": 1
+        "order": 3
       }
     },
     {
-      "name": "Leitmotif: debug (Windows/MSVC)",
+      "name": "Leitmotif: debug Rust shell (Windows/MSVC)",
       "type": "cppvsdbg",
       "request": "launch",
       "program": "${workspaceFolder}/src-tauri/target/debug/leitmotif.exe",
@@ -35,7 +65,7 @@
       "preLaunchTask": "leitmotif: build choreo (dependency)",
       "presentation": {
         "group": "leitmotif",
-        "order": 2
+        "order": 4
       }
     }
   ]

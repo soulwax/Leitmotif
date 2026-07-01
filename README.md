@@ -98,19 +98,26 @@ repo with `cargo build --bin choreo`, then point `CHOREO_BIN` at it (or put it o
 
 ### VS Code
 
-Shared commands ship in `.vscode/`. Open the Leitmotif folder in VS Code and:
+Shared commands ship in `.vscode/`. **Open the `tools/leitmotif` folder** (not the
+game folder) in VS Code, and:
 
-- **Run Build Task** (`Ctrl+Shift+B`) → **leitmotif: dev (debug)** — builds the
-  `choreo` dependency and launches the app in dev mode (hot-reload UI + debug
-  shell). This is the default build task.
+- **Just press `F5`** → **▶ Leitmotif (dev)** — builds the `choreo` dependency and
+  launches the app in dev mode (hot-reload UI). No debugger extension needed; the
+  green play button just runs it. (`▶ Leitmotif (release exe)` runs an
+  already-built exe instead.)
+- **Run Build Task** (`Ctrl+Shift+B`) → **leitmotif: dev (debug)** — same launch
+  from the build side.
 - **Terminal → Run Task…** also offers: *build release (installer)*, *build
   frontend*, *build choreo (dependency)*, *run release exe*.
-- **Run and Debug** (`F5`) → **Leitmotif: debug** — step through the Rust shell
-  with LLDB (or the MSVC config). Recommended extensions are suggested via
-  `.vscode/extensions.json`.
+- To **step through the Rust shell**, pick the `Leitmotif: debug Rust shell`
+  configs (LLDB or MSVC) from the Run and Debug dropdown. Recommended extensions
+  are suggested via `.vscode/extensions.json`.
 
-Every task sets `CHOREO_BIN` to `../../target/debug/choreo.exe` automatically, so
-the app finds the game's CLI without extra setup.
+Every task/launch sets `CHOREO_BIN` to `../../target/debug/choreo.exe`
+automatically, so the app finds the game's CLI without extra setup.
+
+> The **game's** own `F5` (open the EchoWarrior root folder) still runs the game —
+> Leitmotif's play button is separate, active only when this folder is open.
 
 ## Identity
 
