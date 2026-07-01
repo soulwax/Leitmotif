@@ -356,11 +356,24 @@ main {
 
 /* ── node-graph timeline ── */
 
-.detail-trigger {
-  color: var(--muted);
+.trigger-panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  background: var(--panel-2);
+}
+
+.trigger-head {
+  color: var(--accent);
   font-size: 12px;
-  font-family: "Cascadia Code", "Consolas", monospace;
-  margin: 0 0 10px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.trigger-form {
+  display: grid;
+  gap: 8px;
 }
 
 .timeline-wrap {

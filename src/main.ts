@@ -15,6 +15,7 @@ import {
 } from "./bridge";
 import { SceneDoc, type Beat, type Sequence } from "./scene";
 import { buildBeatForm } from "./form";
+import { buildTriggerForm, type Trigger } from "./trigger";
 import { renderTimeline } from "./timeline";
 import { drawStage, screenToWorld } from "./stage";
 import { type PreviewFrame, duration, fetchTimeline, frameAt } from "./preview";
@@ -139,10 +140,26 @@ function renderDetail(): void {
   }
   detailTitle.textContent = seq.id;
 
-  // Trigger summary line (what starts this sequence).
-  const trig = document.createElement("p");
-  trig.className = "detail-trigger";
-  trig.textContent = `Trigger: ${seq.trigger?.kind ?? "always"}`;
+  // Trigger editor — *what starts this sequence*. Schema-driven; undoable.
+  const trig = document.createElement("div");
+  trig.className = "trigger-panel";
+  const trigHead = document.createElement("div");
+  trigHead.className = "trigger-head";
+  trigHead.textContent = "Starts when";
+  trig.appendChild(trigHead);
+  const seqIds = doc.sequences().map((s) => s.id).filter((id) => id !== seq.id);
+  trig.appendChild(
+    buildTriggerForm(seq.trigger as Trigger | undefined, seqIds, (next) => {
+      doc.edit((data) => {
+        const target = data.sequence?.find((s) => s.id === seq.id);
+        if (target) target.trigger = next;
+      });
+      renderDocName();
+      renderSequences(); // summary + chaining edges may change
+      renderDetail();
+      void rebuildPreview();
+    }),
+  );
   detailBody.appendChild(trig);
 
   // The node-graph timeline.

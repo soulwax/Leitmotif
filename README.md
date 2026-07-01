@@ -85,6 +85,12 @@ roadmap `TODO_CHOREO_GUI.md`.
     The cursor turns to a crosshair when a placeable beat is selected.
   - **Undo / redo** — `Ctrl+Z` / `Ctrl+Y` (and toolbar buttons), history recorded
     at the single `SceneDoc.edit` seam, so every structural change is reversible.
+  - **Trigger editor** — choose *what starts a sequence* from a friendly,
+    schema-driven dropdown ("After N seconds", "When an enemy dies", "After
+    another sequence"…) with the right fields for each kind (mode dropdown,
+    sequence-id suggestions, numbers). Updates the chaining edges + preview live;
+    fully undoable. This makes the whole authoring surface editable — a writer can
+    build a scene's beats *and* decide when it plays, without touching data.
 
 Remaining polish lives in `LEITMOTIV_DESIGN.md` (the visual design brief and the
 bar we hold ourselves to) and `TODO_CHOREO_GUI.md` in the game repo (the roadmap).
