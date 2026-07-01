@@ -86,9 +86,119 @@ export class SceneDoc {
   }
 
   /** Mutate the scene through a callback, keeping the model the one owner of state.
-   * (A3+ will route step/beat edits through here so undo has a single seam.) */
+   * All structured edits below funnel through here, so undo has one seam. */
   edit(mut: (data: ChoreographyScene) => void): void {
     mut(this.data);
+  }
+
+  private steps(seqId: string): Step[] | undefined {
+    const seq = this.sequence(seqId);
+    if (!seq) return undefined;
+    if (!seq.step) seq.step = [];
+    return seq.step;
+  }
+
+  // ── step operations ─────────────────────────────────────────────────────────
+
+  /** Append a new empty step to a sequence. Returns the new step index. */
+  addStep(seqId: string): number {
+    let idx = -1;
+    this.edit(() => {
+      const steps = this.steps(seqId);
+      if (!steps) return;
+      steps.push({ duration: 1.0, beat: [] });
+      idx = steps.length - 1;
+    });
+    return idx;
+  }
+
+  removeStep(seqId: string, si: number): void {
+    this.edit(() => {
+      const steps = this.steps(seqId);
+      if (steps && si >= 0 && si < steps.length) steps.splice(si, 1);
+    });
+  }
+
+  /** Move a step left/right by `delta` (clamped). */
+  moveStep(seqId: string, si: number, delta: number): void {
+    this.edit(() => {
+      const steps = this.steps(seqId);
+      if (!steps) return;
+      const to = si + delta;
+      if (si < 0 || si >= steps.length || to < 0 || to >= steps.length) return;
+      const [s] = steps.splice(si, 1);
+      steps.splice(to, 0, s);
+    });
+  }
+
+  // ── beat operations ─────────────────────────────────────────────────────────
+
+  /** Append a new beat (default `idle` by `echo`) to a step. Returns beat index. */
+  addBeat(seqId: string, si: number): number {
+    let idx = -1;
+    this.edit(() => {
+      const step = this.steps(seqId)?.[si];
+      if (!step) return;
+      if (!step.beat) step.beat = [];
+      step.beat.push({ actor: "echo", do: "idle" });
+      idx = step.beat.length - 1;
+    });
+    return idx;
+  }
+
+  removeBeat(seqId: string, si: number, bi: number): void {
+    this.edit(() => {
+      const beats = this.steps(seqId)?.[si]?.beat;
+      if (beats && bi >= 0 && bi < beats.length) beats.splice(bi, 1);
+    });
+  }
+
+  /** Replace a beat's contents (used by the inspector form). */
+  replaceBeat(seqId: string, si: number, bi: number, next: Beat): void {
+    this.edit(() => {
+      const beats = this.steps(seqId)?.[si]?.beat;
+      const target = beats?.[bi];
+      if (!target) return;
+      for (const k of Object.keys(target)) delete target[k];
+      Object.assign(target, next);
+    });
+  }
+
+  /** Move a beat to `(toStep, toIndex)`. Handles same-step reorder and moves
+   * across steps (the parallel-lane drag). `toIndex` past the end appends. */
+  moveBeat(seqId: string, si: number, bi: number, toStep: number, toIndex: number): void {
+    this.edit(() => {
+      const steps = this.steps(seqId);
+      if (!steps) return;
+      const from = steps[si]?.beat;
+      const dest = steps[toStep];
+      if (!from || !dest) return;
+      if (bi < 0 || bi >= from.length) return;
+      if (!dest.beat) dest.beat = [];
+      const [beat] = from.splice(bi, 1);
+      // If moving within the same step and removing shifted the target left.
+      let insertAt = toIndex;
+      if (si === toStep && bi < toIndex) insertAt -= 1;
+      insertAt = Math.max(0, Math.min(insertAt, dest.beat.length));
+      dest.beat.splice(insertAt, 0, beat);
+    });
+  }
+
+  /** If this sequence is chained off another finishing, the parent id (else null).
+   * Chaining in the model is a `trigger = { kind: "on_sequence_finished", id }`. */
+  static chainedFrom(seq: Sequence): string | null {
+    const t = seq.trigger;
+    if (t && t.kind === "on_sequence_finished" && typeof t.id === "string") {
+      return t.id;
+    }
+    return null;
+  }
+
+  /** Ids of sequences this one starts when it finishes (the forward edges). */
+  chains(seqId: string): string[] {
+    return this.sequences()
+      .filter((s) => SceneDoc.chainedFrom(s) === seqId)
+      .map((s) => s.id);
   }
 
   /** A short human summary of a sequence for the list. */

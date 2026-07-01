@@ -43,9 +43,17 @@ roadmap `TODO_CHOREO_GUI.md`.
   supplies verb→field relevance + those enums. That map could later move into the
   schema via `schemars` attributes (a cheap game-crate change).
 
-Next: **A3** node-graph editor, **A4** actor canvas + live preview, **A5**
-timeline transport, **A6** asset browser, **A7** export, **A8** packaging. See
-`LEITMOTIV_DESIGN.md` for the visual design brief.
+- **A3 (done):** the **node-graph timeline** — a sequence is drawn as a
+  horizontal run of steps, each holding its beats as **draggable cards**
+  (parallel lanes). Drag a beat to reorder it within a step or move it to another
+  step; add/delete beats and steps; reorder steps. Sequence **chaining** is shown
+  in the list (`↳ after X` / `→ Y`) from `on_sequence_finished` triggers. All
+  mutations go through structured `SceneDoc` ops (add/remove/move step + beat), so
+  the model stays the single owner of state (and the one seam for undo, A-later).
+
+Next: **A4** actor canvas + live preview, **A5** timeline transport, **A6** asset
+browser, **A7** export, **A8** packaging. See `LEITMOTIV_DESIGN.md` for the visual
+design brief.
 
 ## Layout
 

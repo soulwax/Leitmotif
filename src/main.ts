@@ -1,10 +1,9 @@
-// Leitmotif A1 — open / save a scene, list its sequences, validate.
+// Leitmotif — the editor entry point.
 //
-// This is the first milestone a writer actually touches: the app opens a scene
-// file, shows the sequences inside it, saves it back, and reports validation
-// errors in human terms. Everything flows through the SceneDoc model (the one
-// owner of document state) and the bridge (the one path to the game's `choreo`
-// CLI). The visual editor (node graph, canvas, live preview) builds on this.
+// Open/save scenes, list sequences (A1), edit beats via a schema-driven form (A2),
+// and arrange steps/beats on a node-graph timeline (A3). Everything flows through
+// the SceneDoc model (the one owner of document state) and the bridge (the one
+// path to the game's `choreo` CLI).
 
 import {
   loadScene,
@@ -13,8 +12,9 @@ import {
   saveSceneDialog,
   validate,
 } from "./bridge";
-import { SceneDoc, type Beat, type Sequence, type Step } from "./scene";
+import { SceneDoc, type Beat, type Sequence } from "./scene";
 import { buildBeatForm } from "./form";
+import { renderTimeline } from "./timeline";
 
 function $(id: string): HTMLElement {
   const el = document.getElementById(id);
@@ -72,6 +72,20 @@ function sequenceRow(seq: Sequence): HTMLLIElement {
   meta.textContent = SceneDoc.summarize(seq);
 
   li.append(id, meta);
+
+  // Chaining edges: what starts this, and what it starts (story flow).
+  const from = SceneDoc.chainedFrom(seq);
+  const leadsTo = doc.chains(seq.id);
+  if (from || leadsTo.length) {
+    const chain = document.createElement("span");
+    chain.className = "seq-chain";
+    const parts: string[] = [];
+    if (from) parts.push(`↳ after ${from}`);
+    if (leadsTo.length) parts.push(`→ ${leadsTo.join(", ")}`);
+    chain.textContent = parts.join("   ");
+    li.appendChild(chain);
+  }
+
   if (seq.note) {
     const note = document.createElement("span");
     note.className = "seq-note";
@@ -99,42 +113,63 @@ function renderDetail(): void {
   }
   detailTitle.textContent = seq.id;
 
-  const steps = seq.step ?? [];
-  steps.forEach((step, si) => detailBody.appendChild(stepBlock(step, si)));
+  // Trigger summary line (what starts this sequence).
+  const trig = document.createElement("p");
+  trig.className = "detail-trigger";
+  trig.textContent = `Trigger: ${seq.trigger?.kind ?? "always"}`;
+  detailBody.appendChild(trig);
 
+  // The node-graph timeline.
+  const tl = document.createElement("div");
+  tl.className = "timeline-wrap";
+  detailBody.appendChild(tl);
+  renderTimeline(tl, seq, selectedBeat, {
+    selectBeat: (si, bi) => {
+      selectedBeat = [si, bi];
+      renderDetail();
+    },
+    addBeat: (si) => {
+      const bi = doc.addBeat(seq.id, si);
+      selectedBeat = bi >= 0 ? [si, bi] : selectedBeat;
+      afterStructuralEdit();
+    },
+    deleteBeat: (si, bi) => {
+      doc.removeBeat(seq.id, si, bi);
+      if (selectedBeat && selectedBeat[0] === si && selectedBeat[1] === bi) selectedBeat = null;
+      afterStructuralEdit();
+    },
+    addStep: () => {
+      doc.addStep(seq.id);
+      afterStructuralEdit();
+    },
+    deleteStep: (si) => {
+      doc.removeStep(seq.id, si);
+      if (selectedBeat && selectedBeat[0] === si) selectedBeat = null;
+      afterStructuralEdit();
+    },
+    moveStep: (si, delta) => {
+      doc.moveStep(seq.id, si, delta);
+      selectedBeat = null;
+      afterStructuralEdit();
+    },
+    moveBeat: (fs, fb, ts, ti) => {
+      doc.moveBeat(seq.id, fs, fb, ts, ti);
+      selectedBeat = null;
+      afterStructuralEdit();
+    },
+  });
+
+  // The inspector for the selected beat (schema-driven form).
   if (selectedBeat) {
     detailBody.appendChild(inspector(seq, selectedBeat[0], selectedBeat[1]));
   }
 }
 
-function stepBlock(step: Step, si: number): HTMLElement {
-  const box = document.createElement("div");
-  box.className = "step";
-  const head = document.createElement("div");
-  head.className = "step-head";
-  const when = step.wait_for
-    ? `wait_for ${step.wait_for.kind}`
-    : `${step.duration ?? 0}s`;
-  head.textContent = `Step ${si + 1} · ${when}`;
-  box.appendChild(head);
-
-  const beats = step.beat ?? [];
-  if (beats.length === 0) {
-    box.appendChild(emptyNote("(no beats)"));
-  }
-  beats.forEach((beat, bi) => {
-    const chip = document.createElement("button");
-    chip.className =
-      "beat-chip" +
-      (selectedBeat && selectedBeat[0] === si && selectedBeat[1] === bi ? " selected" : "");
-    chip.textContent = `${beat.actor ?? "echo"} · ${beat.do}`;
-    chip.addEventListener("click", () => {
-      selectedBeat = [si, bi];
-      renderDetail();
-    });
-    box.appendChild(chip);
-  });
-  return box;
+/** After any structural edit, refresh the detail + list + dirty flag. */
+function afterStructuralEdit(): void {
+  renderDocName();
+  renderSequences();
+  renderDetail();
 }
 
 function inspector(seq: Sequence, si: number, bi: number): HTMLElement {
@@ -149,25 +184,17 @@ function inspector(seq: Sequence, si: number, bi: number): HTMLElement {
     panel.appendChild(emptyNote("Beat no longer exists."));
     return panel;
   }
-  // Edit a copy; commit through the doc so it owns state + dirty tracking.
+  // Edit a copy; commit through the doc so it owns state + dirty tracking. If the
+  // verb changed, the card label changes too, so re-render the timeline.
   panel.appendChild(
     buildBeatForm({ ...beat } as Beat, (next) => {
-      doc.edit((data) => {
-        const target = data.sequence?.[seqIndex(seq.id)]?.step?.[si]?.beat?.[bi];
-        if (target) {
-          for (const k of Object.keys(target)) delete (target as Beat)[k];
-          Object.assign(target, next);
-        }
-      });
+      doc.replaceBeat(seq.id, si, bi, next);
       renderDocName();
-      renderSequences(); // summaries may have changed (e.g. verb count)
+      renderSequences();
+      renderDetail();
     }),
   );
   return panel;
-}
-
-function seqIndex(id: string): number {
-  return doc.sequences().findIndex((s) => s.id === id);
 }
 
 function emptyNote(text: string): HTMLElement {
