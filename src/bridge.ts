@@ -6,6 +6,7 @@
 // the calls report a friendly "run inside Tauri" message instead of crashing.
 
 import type { Finding } from "./suggest";
+import { buildStoryGraph, type StoryGraph, type StoryGraphJson } from "./graph";
 
 type Invoke = <T>(cmd: string, args?: Record<string, unknown>) => Promise<T>;
 
@@ -58,6 +59,30 @@ export async function validateJson(path: string): Promise<Finding[]> {
     return Array.isArray(parsed) ? (parsed as Finding[]) : [];
   } catch {
     return [];
+  }
+}
+
+/** Scene `*.toml` file paths in a folder, for the Project loader. [] on any failure. */
+export async function listSceneDir(folder: string): Promise<string[]> {
+  const r = await call("list_scene_dir", { folder });
+  if (!r.ok) return [];
+  try {
+    const parsed = JSON.parse(r.output);
+    return Array.isArray(parsed) ? (parsed as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+/** The resolved story graph for a folder (via `choreo graph --json`). Empty graph on
+ *  any failure — not in Tauri, choreo missing, non-zero exit, or parse error. */
+export async function sceneGraph(folder: string): Promise<StoryGraph> {
+  const r = await call("choreo_graph", { folder });
+  if (!r.ok) return { nodes: [], edges: [] };
+  try {
+    return buildStoryGraph(JSON.parse(r.output) as StoryGraphJson);
+  } catch {
+    return { nodes: [], edges: [] };
   }
 }
 

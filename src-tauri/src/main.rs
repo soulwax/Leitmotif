@@ -68,6 +68,31 @@ fn choreo_validate_json(path: String) -> Result<String, String> {
 }
 
 #[tauri::command]
+fn choreo_graph(folder: String) -> Result<String, String> {
+    // graph always exits 0 and prints one JSON object; return stdout verbatim.
+    run_choreo(&["graph", &folder, "--json"])
+}
+
+#[tauri::command]
+fn list_scene_dir(folder: String) -> Result<String, String> {
+    // Return a JSON array of *.toml file paths in `folder`, sorted. Hand-rolled JSON
+    // to avoid a serde dependency in the shell (matches the "map by hand" convention).
+    let mut paths: Vec<String> = std::fs::read_dir(&folder)
+        .map_err(|e| format!("cannot read dir '{folder}': {e}"))?
+        .flatten()
+        .map(|e| e.path())
+        .filter(|p| p.extension().and_then(|x| x.to_str()) == Some("toml"))
+        .map(|p| p.to_string_lossy().into_owned())
+        .collect();
+    paths.sort();
+    let items: Vec<String> = paths
+        .iter()
+        .map(|p| format!("\"{}\"", p.replace('\\', "\\\\").replace('"', "\\\"")))
+        .collect();
+    Ok(format!("[{}]", items.join(",")))
+}
+
+#[tauri::command]
 fn choreo_preview(
     path: String,
     sequence: String,
@@ -192,6 +217,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             choreo_validate,
             choreo_validate_json,
+            choreo_graph,
+            list_scene_dir,
             choreo_preview,
             choreo_schema,
             choreo_assets,
