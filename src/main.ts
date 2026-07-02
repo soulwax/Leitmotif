@@ -518,12 +518,13 @@ function selectAdjacentStep(delta: 1 | -1): void {
 /** Open the add-beat picker on the currently-selected step (the `a` key
  * binding), by clicking that step's "+ beat" button — the picker itself lives
  * in timeline.ts and is opened the same way a mouse click would. No-op if no
- * step is selected (falls back to step 0 of the selected sequence when a beat
- * is selected but no step is otherwise implied). */
+ * beat is selected: the module only tracks a selected *beat*, not a bare
+ * selected step, so an empty step reached via `shift+j`/`shift+k` (which
+ * clears `selectedBeat` to null) has no step context for `a` to use — click
+ * that step's own "+ beat" button once to seed it. */
 function openAddBeatOnSelectedStep(): void {
-  if (!selectedSeq) return;
-  const si = selectedBeat?.[0];
-  if (si === undefined) return;
+  if (!selectedSeq || !selectedBeat) return;
+  const si = selectedBeat[0];
   const stepCols = timelineHost.querySelectorAll<HTMLElement>(".tl-step");
   const col = stepCols[si];
   const btn = col?.querySelector<HTMLButtonElement>(".tl-add-beat");
