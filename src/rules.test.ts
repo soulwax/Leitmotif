@@ -94,6 +94,32 @@ describe("fix-it", () => {
     expect(goSeq.trigger.id).toBe("s:open");
   });
 
+  it("retargets a dangling on_sequence_finished to the nearest existing id", async () => {
+    // A trigger points at 's:openn' (a typo); the real sequence is 's:open'.
+    // Exercises the nearestId/editDistance retarget branch.
+    const scene = { sequence: [
+      { id: "s:open", step: [{ beat: [{ actor: "echo", do: "nod" }] }] },
+      { id: "s:far", step: [{ beat: [{ actor: "echo", do: "nod" }] }] },
+      { id: "s:go", trigger: { kind: "on_sequence_finished", id: "s:openn" }, step: [{ beat: [] }] },
+    ] };
+    const ctx = {
+      scene: scene as any, seqId: "s:go", stepIndex: 0, selectedBeat: null,
+      actors: ["echo"], sfx: [], frame: null,
+      findings: [{ level: "error", message:
+        "sequence 's:go' triggers on_sequence_finished of unknown sequence 's:openn'" }],
+    };
+    const out = fixSuggestions(ctx as any);
+    expect(out.length).toBeGreaterThan(0);
+    expect(out[0].kind).toBe("fix");
+    const { SceneDoc } = await import("./scene");
+    const doc = SceneDoc.fromJson(JSON.stringify(scene), null);
+    out[0].apply(doc);
+    const after = JSON.parse(doc.toJson());
+    const goSeq = after.sequence.find((q: any) => q.id === "s:go");
+    // nearest by edit distance to 's:openn' is 's:open' (distance 1), not 's:far'.
+    expect(goSeq.trigger.id).toBe("s:open");
+  });
+
   it("returns nothing for a finding with no actionable pattern", () => {
     const ctx = {
       scene: { sequence: [] } as any, seqId: null, stepIndex: null, selectedBeat: null,
