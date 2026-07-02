@@ -21,6 +21,7 @@ import { drawStage, screenToWorld } from "./stage";
 import { type PreviewFrame, duration, fetchTimeline, frameAt } from "./preview";
 import { loadAssets } from "./assets";
 import { verbTakesWorldPoint } from "./vocab";
+import "./rules"; // registers the Tier-1 RuleProvider with the suggestion engine
 
 function $(id: string): HTMLElement {
   const el = document.getElementById(id);
