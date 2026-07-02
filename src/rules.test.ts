@@ -50,3 +50,22 @@ describe("natural-next-beat rule", () => {
     expect(doc.canUndo()).toBe(true);
   });
 });
+
+describe("insert-a-moment", () => {
+  it("offers ready-made moments and each expands to >=2 valid beats", async () => {
+    const { momentSuggestions } = await import("./rules");
+    const ctx = {
+      scene: { sequence: [{ id: "s", step: [{ beat: [] }] }] } as any,
+      seqId: "s", stepIndex: 0, selectedBeat: null,
+      actors: ["echo", "eve"], sfx: [], frame: null, findings: [],
+    };
+    const out = momentSuggestions(ctx);
+    expect(out.length).toBeGreaterThan(0);
+    for (const m of out) expect(m.kind).toBe("moment");
+    // apply the first moment and check it added multiple beats
+    const doc = SceneDoc.fromJson(JSON.stringify(ctx.scene), null);
+    out[0].apply(doc);
+    const scene = JSON.parse(doc.toJson());
+    expect(scene.sequence[0].step[0].beat.length).toBeGreaterThanOrEqual(2);
+  });
+});

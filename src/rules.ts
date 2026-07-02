@@ -65,9 +65,67 @@ export function nextBeatSuggestions(ctx: SuggestContext): Suggestion[] {
   });
 }
 
+interface MomentDef {
+  id: string;
+  label: string;
+  detail: string;
+  beats: (actors: string[]) => Beat[];
+}
+
+const MOMENTS: MomentDef[] = [
+  {
+    id: "meet-and-speak",
+    label: "Two characters meet and speak",
+    detail: "One walks in, they face each other, the other says a line.",
+    beats: (a) => {
+      const [x = "echo", y = "eve"] = a;
+      return [
+        { actor: y, do: "walk_in", from: "east" },
+        { actor: x, do: "face", direction: "right" },
+        { actor: y, do: "say", text: "" },
+      ];
+    },
+  },
+  {
+    id: "walk-off",
+    label: "Someone walks off",
+    detail: "An actor walks toward a screen edge.",
+    beats: (a) => [{ actor: a[0] ?? "echo", do: "walk_to", x: 320, y: 1080, speed: 150 }],
+  },
+  {
+    id: "beat-of-silence",
+    label: "A beat of silence",
+    detail: "A gentle camera nudge and a breath.",
+    beats: (a) => [
+      { actor: "world", do: "camera", zoom: 1.05, duration: 1.0 },
+      { actor: a[0] ?? "echo", do: "breathe" },
+    ],
+  },
+];
+
+export function momentSuggestions(ctx: SuggestContext): Suggestion[] {
+  if (ctx.seqId == null || ctx.stepIndex == null) return [];
+  const seqId = ctx.seqId,
+    si = ctx.stepIndex;
+  return MOMENTS.map((m) => ({
+    id: `moment:${m.id}`,
+    kind: "moment" as const,
+    label: m.label,
+    detail: m.detail,
+    confidence: 0.3,
+    apply: (doc) => {
+      for (const beat of m.beats(ctx.actors)) {
+        const bi = doc.addBeat(seqId, si);
+        if (bi >= 0) doc.replaceBeat(seqId, si, bi, beat);
+      }
+    },
+  }));
+}
+
 export const ruleProvider: SuggestionProvider = {
   name: "rules",
-  suggest: (ctx) => Promise.resolve(nextBeatSuggestions(ctx)),
+  suggest: (ctx) =>
+    Promise.resolve([...nextBeatSuggestions(ctx), ...momentSuggestions(ctx)]),
 };
 
 registerProvider(ruleProvider);
