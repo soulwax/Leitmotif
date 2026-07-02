@@ -21,7 +21,7 @@ import { buildTriggerForm, type Trigger } from "./trigger";
 import { renderTimeline } from "./timeline";
 import { drawStage, nearestActor, screenToWorld } from "./stage";
 import { type PreviewFrame, duration, fetchTimeline, frameAt } from "./preview";
-import { renderStoryCanvas, nodeAt, type StoryLayout } from "./story";
+import { renderStoryCanvas, layoutGraph, nodeAt, type StoryLayout } from "./story";
 import { loadAssets, actorIds, sfxIds } from "./assets";
 import { verbTakesWorldPoint } from "./vocab";
 import { suggestions, type Finding, type SuggestContext, type Suggestion } from "./suggest";
@@ -447,8 +447,13 @@ function renderStory(): void {
   editorMain.classList.toggle("hidden", inStory);
   btnStoryToggle.textContent = inStory ? "Scene ›" : "‹ Story";
   if (!inStory) return;
+  // Compute the layout BEFORE sizing so fitStoryCanvas() sees the graph's real
+  // dimensions on the very first open (otherwise a graph wider/taller than the
+  // viewport clips until the next resize/toggle). renderStoryCanvas draws against
+  // the same deterministic layout.
+  storyLayout = layoutGraph(project.graph);
   fitStoryCanvas();
-  storyLayout = renderStoryCanvas(storyCanvas, project.graph, hoveredScene);
+  renderStoryCanvas(storyCanvas, project.graph, hoveredScene);
 }
 
 /** Open a project folder: derive it from the existing file-open dialog (no new
