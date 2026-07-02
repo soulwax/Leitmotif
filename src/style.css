@@ -661,6 +661,92 @@ main {
   font-size: 22px;
 }
 
+/* add-beat picker — "never a blank card": contextual suggestions on top, the
+   full verb list below a divider. Anchored under the `+ beat` button. */
+.tl-picker {
+  position: fixed;
+  z-index: 40;
+  width: 240px;
+  max-height: 360px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 7px;
+  border-radius: 10px;
+  background: var(--panel);
+  border: 1px solid var(--line-2);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+}
+
+.tl-picker-loading {
+  padding: 6px 7px;
+  font: 400 11.5px var(--sans);
+  color: var(--muted-2);
+}
+
+.tl-picker-heading {
+  padding: 6px 7px 3px;
+  font: 600 10px var(--sans);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+
+.tl-picker-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  width: 100%;
+  padding: 7px 8px;
+  border-radius: 7px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  color: var(--ink);
+  font: 500 12.5px var(--sans);
+}
+.tl-picker-row:hover {
+  background: var(--panel-2);
+}
+
+.tl-picker-suggestion {
+  border: 1px solid var(--line-2);
+}
+.tl-picker-suggestion:hover {
+  border-color: var(--gold);
+}
+
+.tl-picker-row-label {
+  color: var(--ink);
+}
+
+.tl-picker-row-detail {
+  font: 400 10.5px var(--mono);
+  color: var(--muted-2);
+}
+
+.tl-picker-divider {
+  height: 1px;
+  margin: 5px 2px;
+  background: var(--line-2);
+}
+
+.tl-picker-verbs {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tl-picker-verb {
+  text-transform: capitalize;
+  color: var(--muted);
+}
+.tl-picker-verb:hover {
+  color: var(--gold);
+}
+
 /* right: inspector */
 
 .inspector-col {

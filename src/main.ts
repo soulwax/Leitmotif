@@ -13,14 +13,15 @@ import {
   saveSceneDialog,
   validate,
 } from "./bridge";
-import { SceneDoc, type Beat, type Sequence } from "./scene";
+import { SceneDoc, type Beat, type ChoreographyScene, type Sequence } from "./scene";
 import { buildBeatForm } from "./form";
 import { buildTriggerForm, type Trigger } from "./trigger";
 import { renderTimeline } from "./timeline";
 import { drawStage, screenToWorld } from "./stage";
 import { type PreviewFrame, duration, fetchTimeline, frameAt } from "./preview";
-import { loadAssets } from "./assets";
+import { loadAssets, actorIds, sfxIds } from "./assets";
 import { verbTakesWorldPoint } from "./vocab";
+import { suggestions, type SuggestContext } from "./suggest";
 import "./rules"; // registers the Tier-1 RuleProvider with the suggestion engine
 
 function $(id: string): HTMLElement {
@@ -226,6 +227,24 @@ function renderDetail(): void {
       selectedBeat = null;
       afterStructuralEdit();
     },
+    suggestBeatsFor: async (si) => {
+      if (!selectedSeq) return [];
+      const ctx = buildSuggestContext(si, null);
+      const all = await suggestions(ctx);
+      return all.filter((s) => s.kind === "beat");
+    },
+    applySuggestion: (s) => {
+      s.apply(doc);
+      afterStructuralEdit();
+    },
+    addBeatVerb: (si, verb) => {
+      const bi = doc.addBeat(selectedSeq!, si);
+      if (bi >= 0) {
+        doc.replaceBeat(selectedSeq!, si, bi, { actor: "echo", do: verb });
+        selectedBeat = [si, bi];
+      }
+      afterStructuralEdit();
+    },
   });
 
   // The inspector for the selected beat (schema-driven form) — right column.
@@ -245,6 +264,22 @@ function afterStructuralEdit(): void {
   renderSequences();
   renderDetail();
   void rebuildPreview();
+}
+
+/** Assemble a SuggestContext from the current doc/selection/assets/preview, for
+ * the suggestion engine (Task 1). `findings` is wired to real diagnostics in a
+ * later task; empty for now. */
+function buildSuggestContext(stepIndex: number, selBeat: Beat | null): SuggestContext {
+  return {
+    scene: JSON.parse(doc.toJson()) as ChoreographyScene,
+    seqId: selectedSeq,
+    stepIndex,
+    selectedBeat: selBeat,
+    actors: actorIds(),
+    sfx: sfxIds(),
+    frame: frames.length ? frameAt(frames, playT) : null,
+    findings: [],
+  };
 }
 
 function inspector(seq: Sequence, si: number, bi: number): HTMLElement {
