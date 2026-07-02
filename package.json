@@ -10,12 +10,14 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build"
+    "tauri:build": "tauri build",
+    "test": "vitest run"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",
     "typescript": "^5.6",
-    "vite": "^5.4"
+    "vite": "^5.4",
+    "vitest": "^2"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",
