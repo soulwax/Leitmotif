@@ -959,3 +959,88 @@ main {
   background: var(--teal);
   color: #0f0d15;
 }
+
+/* keyboard cheat-sheet overlay (keys.ts) — `?` toggles it, Escape closes it */
+
+.keys-overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 9, 14, 0.6);
+  backdrop-filter: blur(2px);
+}
+
+.keys-overlay {
+  width: 420px;
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border: 1px solid var(--line-2);
+  border-radius: 13px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.keys-overlay-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 17px;
+  border-bottom: 1px solid var(--line);
+  background: var(--chrome);
+}
+
+.keys-overlay-head h2 {
+  font: 600 14px var(--sans);
+  color: var(--ink-bright);
+}
+
+.keys-overlay-close {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 12px;
+  border-radius: 8px;
+}
+
+.keys-overlay-list {
+  overflow-y: auto;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.keys-overlay-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 7px;
+  border-radius: 8px;
+}
+.keys-overlay-row:hover {
+  background: var(--panel-2);
+}
+
+.keys-overlay-combo {
+  flex: none;
+  min-width: 88px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: var(--panel-2);
+  border: 1px solid var(--line-2);
+  color: var(--gold-lit);
+  font: 600 11.5px var(--mono);
+  text-align: center;
+}
+
+.keys-overlay-label {
+  color: var(--ink);
+  font-size: 12.5px;
+}

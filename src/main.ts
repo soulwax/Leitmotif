@@ -24,6 +24,7 @@ import { loadAssets, actorIds, sfxIds } from "./assets";
 import { verbTakesWorldPoint } from "./vocab";
 import { suggestions, type Finding, type SuggestContext, type Suggestion } from "./suggest";
 import "./rules"; // registers the Tier-1 RuleProvider with the suggestion engine
+import { installKeys, helpBinding, type KeyBinding } from "./keys";
 
 function $(id: string): HTMLElement {
   const el = document.getElementById(id);
@@ -215,11 +216,7 @@ function renderDetail(): void {
       selectedBeat = bi >= 0 ? [si, bi] : selectedBeat;
       afterStructuralEdit();
     },
-    deleteBeat: (si, bi) => {
-      doc.removeBeat(seq.id, si, bi);
-      if (selectedBeat && selectedBeat[0] === si && selectedBeat[1] === bi) selectedBeat = null;
-      afterStructuralEdit();
-    },
+    deleteBeat: (si, bi) => deleteBeatAt(seq.id, si, bi),
     addStep: () => {
       doc.addStep(seq.id);
       afterStructuralEdit();
@@ -276,6 +273,21 @@ function afterStructuralEdit(): void {
   renderSequences();
   renderDetail();
   void rebuildPreview();
+}
+
+/** Remove one beat, clearing the selection if it pointed at the removed beat.
+ * Shared by the timeline's card delete button and the `x` key binding. */
+function deleteBeatAt(seqId: string, si: number, bi: number): void {
+  doc.removeBeat(seqId, si, bi);
+  if (selectedBeat && selectedBeat[0] === si && selectedBeat[1] === bi) selectedBeat = null;
+  afterStructuralEdit();
+}
+
+/** Delete the currently-selected beat, if any (the `x` key binding). No-op
+ * with nothing selected. */
+function deleteSelectedBeat(): void {
+  if (!selectedSeq || !selectedBeat) return;
+  deleteBeatAt(selectedSeq, selectedBeat[0], selectedBeat[1]);
 }
 
 /** Assemble a SuggestContext from the current doc/selection/assets/preview/
@@ -470,6 +482,74 @@ function updateStageHint(): void {
 function currentBeat(): Beat | null {
   if (!selectedSeq || !selectedBeat) return null;
   return doc.sequence(selectedSeq)?.step?.[selectedBeat[0]]?.beat?.[selectedBeat[1]] ?? null;
+}
+
+/** Move `selectedBeat` to the next/previous beat within its step (clamped at
+ * the ends — no wraparound). The `j` / `k` key bindings. No-op with nothing
+ * selected or an empty step. */
+function selectAdjacentBeat(delta: 1 | -1): void {
+  if (!selectedSeq || !selectedBeat) return;
+  const seq = doc.sequence(selectedSeq);
+  const [si, bi] = selectedBeat;
+  const beats = seq?.step?.[si]?.beat;
+  if (!beats || beats.length === 0) return;
+  const next = Math.max(0, Math.min(beats.length - 1, bi + delta));
+  if (next === bi) return;
+  selectedBeat = [si, next];
+  renderDetail();
+}
+
+/** Move the selection to the next/previous step (clamped at the ends), landing
+ * on that step's first beat if it has one, else clearing the beat selection.
+ * The `shift+j` / `shift+k` key bindings. No-op with no sequence selected. */
+function selectAdjacentStep(delta: 1 | -1): void {
+  if (!selectedSeq) return;
+  const seq = doc.sequence(selectedSeq);
+  const steps = seq?.step;
+  if (!steps || steps.length === 0) return;
+  const currentStep = selectedBeat?.[0] ?? 0;
+  const next = Math.max(0, Math.min(steps.length - 1, currentStep + delta));
+  if (next === currentStep && selectedBeat) return;
+  const beats = steps[next]?.beat;
+  selectedBeat = beats && beats.length > 0 ? [next, 0] : null;
+  renderDetail();
+}
+
+/** Open the add-beat picker on the currently-selected step (the `a` key
+ * binding), by clicking that step's "+ beat" button — the picker itself lives
+ * in timeline.ts and is opened the same way a mouse click would. No-op if no
+ * step is selected (falls back to step 0 of the selected sequence when a beat
+ * is selected but no step is otherwise implied). */
+function openAddBeatOnSelectedStep(): void {
+  if (!selectedSeq) return;
+  const si = selectedBeat?.[0];
+  if (si === undefined) return;
+  const stepCols = timelineHost.querySelectorAll<HTMLElement>(".tl-step");
+  const col = stepCols[si];
+  const btn = col?.querySelector<HTMLButtonElement>(".tl-add-beat");
+  btn?.click();
+}
+
+/** Apply the top-confidence Suggested beat for the selected step/beat (the
+ * `enter` key binding) — the same computation the Suggested chip uses. No-op
+ * if nothing is selected or there's no suggestion. */
+async function acceptTopSuggestion(): Promise<void> {
+  if (!selectedSeq || !selectedBeat) return;
+  const [si, bi] = selectedBeat;
+  const ctx = buildSuggestContext(si, currentBeat());
+  let all: Suggestion[] = [];
+  try {
+    all = await suggestions(ctx);
+  } catch {
+    return;
+  }
+  // Stale-guard: the selection may have moved on while awaiting.
+  if (!selectedSeq || selectedSeq !== ctx.seqId) return;
+  if (!selectedBeat || selectedBeat[0] !== si || selectedBeat[1] !== bi) return;
+  const top = all.filter((s) => s.kind === "beat").sort((a, b) => b.confidence - a.confidence)[0];
+  if (!top) return;
+  top.apply(doc);
+  afterStructuralEdit();
 }
 
 /** Whether clicking the stage would set a destination right now. */
@@ -686,6 +766,38 @@ function matchingFix(fixes: Suggestion[], finding: Finding): Suggestion | undefi
   return fixes.find((f) => f.id.endsWith(`:${i}`));
 }
 
+/** The current `kind:"fix"` suggestions for the Fix-it ribbon's findings — the
+ * same computation `renderFixRibbon` uses, factored out so the `f` / `shift+f`
+ * key bindings can apply them without duplicating the ribbon's logic. */
+async function currentFixes(): Promise<Suggestion[]> {
+  if (findings.length === 0) return [];
+  const ctx = buildSuggestContext(selectedBeat?.[0] ?? 0, currentBeat());
+  try {
+    return (await suggestions(ctx)).filter((s) => s.kind === "fix");
+  } catch {
+    return [];
+  }
+}
+
+/** Apply the first available fix (the `f` key binding). No-op if there are none. */
+async function fixFirst(): Promise<void> {
+  const fixes = await currentFixes();
+  const fix = fixes[0];
+  if (!fix) return;
+  fix.apply(doc);
+  afterStructuralEdit();
+  void runValidate();
+}
+
+/** Apply every available fix (the `shift+f` key binding). No-op if there are none. */
+async function fixAll(): Promise<void> {
+  const fixes = await currentFixes();
+  if (fixes.length === 0) return;
+  for (const fix of fixes) fix.apply(doc);
+  afterStructuralEdit();
+  void runValidate();
+}
+
 /** Publish the scene to the game: validate, then (only if clean) write the .toml
  * the game reads. Never writes an invalid scene. */
 async function doExport(): Promise<void> {
@@ -742,22 +854,30 @@ stageCanvas.addEventListener("mousemove", (e) => {
   void e;
 });
 
-window.addEventListener("keydown", (e) => {
-  const mod = e.ctrlKey || e.metaKey;
-  if (mod && e.key === "s") {
-    e.preventDefault();
-    void doSave(e.shiftKey);
-  } else if (mod && e.key === "o") {
-    e.preventDefault();
-    void doOpen();
-  } else if (mod && !e.shiftKey && e.key.toLowerCase() === "z") {
-    e.preventDefault();
-    doUndo();
-  } else if (mod && (e.key.toLowerCase() === "y" || (e.shiftKey && e.key.toLowerCase() === "z"))) {
-    e.preventDefault();
-    doRedo();
-  }
-});
+// The one global keyboard scheme (see keys.ts): a binding table drives both the
+// single keydown listener and the `?` cheat-sheet overlay, so the two can never
+// drift apart. Ctrl+S/O/Z/Y are the same combos the old ad-hoc listener handled;
+// they're folded in here rather than living separately.
+const keyBindings: KeyBinding[] = [
+  { combo: "space", label: "Play / pause the preview", run: togglePlay },
+  { combo: "a", label: "Add a beat on the selected step", run: openAddBeatOnSelectedStep },
+  { combo: "enter", label: "Accept the top Suggested beat", run: () => void acceptTopSuggestion() },
+  { combo: "j", label: "Select the next beat", run: () => selectAdjacentBeat(1) },
+  { combo: "k", label: "Select the previous beat", run: () => selectAdjacentBeat(-1) },
+  { combo: "shift+j", label: "Select the next step", run: () => selectAdjacentStep(1) },
+  { combo: "shift+k", label: "Select the previous step", run: () => selectAdjacentStep(-1) },
+  { combo: "x", label: "Delete the selected beat", run: deleteSelectedBeat },
+  { combo: "f", label: "Fix the first finding", run: () => void fixFirst() },
+  { combo: "shift+f", label: "Fix all findings", run: () => void fixAll() },
+  { combo: "ctrl+s", label: "Save", run: () => void doSave(false) },
+  { combo: "ctrl+shift+s", label: "Save as", run: () => void doSave(true) },
+  { combo: "ctrl+o", label: "Open", run: () => void doOpen() },
+  { combo: "ctrl+z", label: "Undo", run: doUndo },
+  { combo: "ctrl+y", label: "Redo", run: doRedo },
+  { combo: "ctrl+shift+z", label: "Redo", run: doRedo },
+];
+keyBindings.push(helpBinding(keyBindings));
+installKeys(keyBindings);
 
 function doUndo(): void {
   if (!doc.undo()) return;
