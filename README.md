@@ -103,6 +103,38 @@ roadmap `TODO_CHOREO_GUI.md`.
     fully undoable. This makes the whole authoring surface editable — a writer can
     build a scene's beats *and* decide when it plays, without touching data.
 
+- **Smart authoring aids (Layer 2A — done):** Leitmotif proposes the next move
+  instead of leaving a writer facing a blank card. A **Tier-1 suggestion engine**
+  (`src/suggest.ts`) fans context out to pluggable `SuggestionProvider`s, then
+  merges, de-dupes, ranks by confidence, and isolates each provider behind a
+  timeout — so a slow or throwing provider simply contributes nothing. The shipped
+  `RuleProvider` (`src/rules.ts`) is **deterministic, offline, and needs no API
+  key**; every suggestion it makes is **valid by construction** (it draws only from
+  the beat vocabulary in `src/vocab.ts` and the actor/sfx ids the game reports), and
+  every one applies through `SceneDoc`, so it's a single undoable step. It powers
+  five surfaces:
+  - **Action-picker add-beat** — the timeline's `+ beat` opens a picker whose top
+    rows are the natural next beats for that step, over the full verb list.
+  - **✦ Suggested chip** — one click in the inspector applies the best next beat.
+  - **Insert a moment** — ready-made multi-beat blocks (two characters meet and
+    speak, someone walks off, a beat of silence).
+  - **Fix-it / Fix-all ribbon** — the validation area turns each fixable finding
+    from `choreo validate --json` into a one-click fix (qualify a bare reference,
+    retarget a dangling chain); unfixable findings still show as plain text.
+  - **Snap-to-actor** — placing a beat near a character offers "Beside X" instead
+    of a raw coordinate.
+
+  A **discoverable keyboard scheme** covers the whole loop (`space` play, `a`
+  add-beat, `enter` accept the suggestion, `j`/`k` move, `x` delete, `f`/`shift+f`
+  fix, `ctrl+z`/`ctrl+y` undo/redo) with a **`?` cheat-sheet** listing every
+  binding. Shortcuts are suppressed while typing in a field.
+
+  An **LLM tier is a future, opt-in drop-in** behind the same `SuggestionProvider`
+  seam — nothing about it is built or required today; the rules-only floor stands on
+  its own with no network and no key. When it lands, it will read its key from a
+  user-managed, git-ignored file outside the repo (or the OS keychain), never a
+  key baked into the app.
+
 Remaining polish lives in `LEITMOTIV_DESIGN.md` (the visual design brief and the
 bar we hold ourselves to) and `TODO_CHOREO_GUI.md` in the game repo (the roadmap).
 
