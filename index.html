@@ -21,12 +21,26 @@
         <span class="toolbar-sep"></span>
         <button id="btn-undo" class="small ghost" title="Undo (Ctrl+Z)" disabled>↶ Undo</button>
         <button id="btn-redo" class="small ghost" title="Redo (Ctrl+Y)" disabled>↷ Redo</button>
+        <span class="toolbar-sep"></span>
+        <button id="btn-open-folder" class="small ghost" title="Open a folder of scenes">
+          Open folder…
+        </button>
+        <button id="btn-story-toggle" class="small ghost" title="Switch between the story graph and the scene editor">
+          ‹ Story
+        </button>
+        <button id="btn-story-fit" class="small ghost" title="Scroll the story graph back to its origin">
+          Fit
+        </button>
         <span class="spacer"></span>
         <span id="doc-name" class="doc-name">— no scene —</span>
         <span class="toolbar-sep"></span>
         <button id="btn-export" class="gold">Export to game</button>
       </div>
     </header>
+
+    <div class="story-view hidden" id="story-view">
+      <canvas id="story-canvas"></canvas>
+    </div>
 
     <main>
       <!-- left: sequences -->

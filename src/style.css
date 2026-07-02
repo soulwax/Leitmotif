@@ -183,6 +183,27 @@ button:disabled:hover {
   color: var(--ink);
 }
 
+/* ── visibility helper ── */
+
+.hidden {
+  display: none !important;
+}
+
+/* ── story canvas (Story ⇄ Scene shell) ── */
+/* Read-only graph view: scene nodes as cards, chain edges as arrows. Sibling of
+   <main>, toggled by main.ts's `mode` state — never both visible at once. */
+
+.story-view {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: var(--bg);
+}
+
+#story-canvas {
+  display: block;
+}
+
 /* ── main layout: sequences | center (stage over timeline) | inspector ── */
 
 main {

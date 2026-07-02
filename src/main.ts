@@ -21,6 +21,7 @@ import { buildTriggerForm, type Trigger } from "./trigger";
 import { renderTimeline } from "./timeline";
 import { drawStage, nearestActor, screenToWorld } from "./stage";
 import { type PreviewFrame, duration, fetchTimeline, frameAt } from "./preview";
+import { renderStoryCanvas, nodeAt, type StoryLayout } from "./story";
 import { loadAssets, actorIds, sfxIds } from "./assets";
 import { verbTakesWorldPoint } from "./vocab";
 import { suggestions, type Finding, type SuggestContext, type Suggestion } from "./suggest";
@@ -60,9 +61,19 @@ const btnPlay = $("btn-play") as HTMLButtonElement;
 const btnUndo = $("btn-undo") as HTMLButtonElement;
 const btnRedo = $("btn-redo") as HTMLButtonElement;
 
+// ── story canvas shell (Story ⇄ Scene) ───────────────────────────────────────
+const btnOpenFolder = $("btn-open-folder") as HTMLButtonElement;
+const btnStoryToggle = $("btn-story-toggle") as HTMLButtonElement;
+const btnStoryFit = $("btn-story-fit") as HTMLButtonElement;
+const storyView = $("story-view");
+const storyCanvas = $("story-canvas") as HTMLCanvasElement;
+const editorMain = document.querySelector("main") as HTMLElement;
+
 let doc: SceneDoc = SceneDoc.empty();
-// @ts-expect-error unused until Task 5 (canvas) reads it as the source of truth
 let project: Project = Project.empty();
+let mode: "story" | "scene" = "scene";
+let storyLayout: StoryLayout | null = null;
+let hoveredScene: string | null = null;
 let selectedSeq: string | null = null;
 /** The beat currently open in the inspector, as [stepIndex, beatIndex]. */
 let selectedBeat: [number, number] | null = null;
@@ -406,6 +417,61 @@ function renderAll(): void {
   renderDocName();
   renderSequences();
   renderDetail();
+}
+
+// ── story canvas shell (Story ⇄ Scene) ───────────────────────────────────────
+
+/** Size the story canvas's backing store to its (scrollable) container, matching
+ * the graph's own layout dimensions so the whole graph is reachable by scroll. */
+function fitStoryCanvas(): void {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const rect = storyView.getBoundingClientRect();
+  const w = Math.max(1, Math.round(Math.max(storyLayout?.width ?? 0, rect.width) * dpr));
+  const h = Math.max(1, Math.round(Math.max(storyLayout?.height ?? 0, rect.height) * dpr));
+  if (storyCanvas.width !== w || storyCanvas.height !== h) {
+    storyCanvas.width = w;
+    storyCanvas.height = h;
+  }
+  storyCanvas.style.width = `${w / dpr}px`;
+  storyCanvas.style.height = `${h / dpr}px`;
+  const ctx = storyCanvas.getContext("2d");
+  if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+/** Show/hide the story workspace vs. the editor, and (in story mode) draw the
+ * graph. Read-only this slice: click opens a scene in the editor, hover
+ * highlights a node — no drag, no CRUD. Safe to call with an empty graph. */
+function renderStory(): void {
+  const inStory = mode === "story";
+  storyView.classList.toggle("hidden", !inStory);
+  editorMain.classList.toggle("hidden", inStory);
+  btnStoryToggle.textContent = inStory ? "Scene ›" : "‹ Story";
+  if (!inStory) return;
+  fitStoryCanvas();
+  storyLayout = renderStoryCanvas(storyCanvas, project.graph, hoveredScene);
+}
+
+/** Open a project folder: derive it from the existing file-open dialog (no new
+ * Tauri dialog command), load every scene under it, and switch to story mode. */
+async function doOpenFolder(): Promise<void> {
+  const path = await openSceneDialog();
+  if (!path) return;
+  const folder = path.replace(/[\\/][^\\/]*$/, "");
+  project = await Project.open(folder);
+  mode = "story";
+  renderStory();
+}
+
+/** Flip between the story graph and the single-scene editor. */
+function toggleStoryMode(): void {
+  mode = mode === "story" ? "scene" : "story";
+  renderStory();
+}
+
+/** Scroll the story workspace back to its origin (the "fit" affordance — this
+ * slice has no zoom, so fitting just means "back to the top-left"). */
+function fitStoryView(): void {
+  storyView.scrollTo({ left: 0, top: 0 });
 }
 
 function setValidation(text: string, isError = false): void {
@@ -842,6 +908,34 @@ $("btn-validate").addEventListener("click", () => void runValidate());
 btnUndo.addEventListener("click", doUndo);
 btnRedo.addEventListener("click", doRedo);
 
+// story canvas shell
+btnOpenFolder.addEventListener("click", () => void doOpenFolder());
+btnStoryToggle.addEventListener("click", toggleStoryMode);
+btnStoryFit.addEventListener("click", fitStoryView);
+storyCanvas.addEventListener("click", (e) => {
+  const scene = storyLayout ? nodeAt(storyLayout, e.offsetX, e.offsetY) : null;
+  if (!scene) return;
+  const d = project.doc(scene);
+  if (!d) return;
+  doc = d;
+  project.setActive(scene);
+  mode = "scene";
+  selectedSeq = null;
+  selectedBeat = null;
+  renderDocName();
+  renderSequences();
+  renderDetail();
+  void rebuildPreview();
+  renderStory();
+});
+storyCanvas.addEventListener("mousemove", (e) => {
+  const scene = storyLayout ? nodeAt(storyLayout, e.offsetX, e.offsetY) : null;
+  if (scene === hoveredScene) return;
+  hoveredScene = scene;
+  storyCanvas.style.cursor = scene ? "pointer" : "default";
+  storyLayout = renderStoryCanvas(storyCanvas, project.graph, hoveredScene);
+});
+
 // transport
 btnPlay.addEventListener("click", togglePlay);
 $("btn-refresh-preview").addEventListener("click", () => void rebuildPreview());
@@ -929,12 +1023,14 @@ window.addEventListener("resize", () => {
     resizeRaf = 0;
     fitStageCanvas();
     drawStage(stageCanvas, frames.length ? frameAt(frames, playT) : null);
+    if (mode === "story") renderStory();
   });
 });
 
 renderAll();
 fitStageCanvas();
 drawStage(stageCanvas, null);
+renderStory();
 
 // Dev-only seam: load a scene from a JSON string without the native dialog, so
 // the UI can be driven in a browser during development. Never present in a
