@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { nextBeatSuggestions } from "./rules";
+import { nextBeatSuggestions, fixSuggestions } from "./rules";
 import { SceneDoc } from "./scene";
 import type { SuggestContext } from "./suggest";
 
@@ -67,5 +67,39 @@ describe("insert-a-moment", () => {
     out[0].apply(doc);
     const scene = JSON.parse(doc.toJson());
     expect(scene.sequence[0].step[0].beat.length).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe("fix-it", () => {
+  it("offers a fix for a suffix-only bare-ref warning and qualifies the id", async () => {
+    const scene = { sequence: [
+      { id: "s:open", step: [{ beat: [{ actor: "echo", do: "nod" }] }] },
+      { id: "s:go", trigger: { kind: "on_sequence_finished", id: "open" }, step: [{ beat: [] }] },
+    ] };
+    const ctx = {
+      scene: scene as any, seqId: "s:go", stepIndex: 0, selectedBeat: null,
+      actors: ["echo"], sfx: [], frame: null,
+      findings: [{ level: "warning", message:
+        "sequence 's:go' triggers on_sequence_finished of bare reference 'open' which resolves to 's:open' by scene suffix; ... qualify it as 's:open'" }],
+    };
+    const out = fixSuggestions(ctx as any);
+    expect(out.length).toBeGreaterThan(0);
+    expect(out[0].kind).toBe("fix");
+    // apply: the trigger id becomes the qualified 's:open'
+    const { SceneDoc } = await import("./scene");
+    const doc = SceneDoc.fromJson(JSON.stringify(scene), null);
+    out[0].apply(doc);
+    const after = JSON.parse(doc.toJson());
+    const goSeq = after.sequence.find((q: any) => q.id === "s:go");
+    expect(goSeq.trigger.id).toBe("s:open");
+  });
+
+  it("returns nothing for a finding with no actionable pattern", () => {
+    const ctx = {
+      scene: { sequence: [] } as any, seqId: null, stepIndex: null, selectedBeat: null,
+      actors: [], sfx: [], frame: null,
+      findings: [{ level: "error", message: "some unrecognized problem" }],
+    };
+    expect(fixSuggestions(ctx as any)).toEqual([]);
   });
 });

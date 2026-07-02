@@ -122,10 +122,81 @@ export function momentSuggestions(ctx: SuggestContext): Suggestion[] {
   }));
 }
 
+/** Turn actionable validate findings into one-click fixes. Only patterns we can
+ * safely auto-repair produce a suggestion; others are shown as plain text by the
+ * ribbon (no Fix button). */
+export function fixSuggestions(ctx: SuggestContext): Suggestion[] {
+  const out: Suggestion[] = [];
+  for (let i = 0; i < ctx.findings.length; i++) {
+    const msg = ctx.findings[i].message;
+    // Suffix-only bare ref: "... bare reference 'X' ... qualify it as 'scene:X'"
+    const m = /bare reference '([^']+)'.*qualify it as '([^']+)'/.exec(msg);
+    if (m) {
+      const bare = m[1], qualified = m[2];
+      out.push({
+        id: `fix:qualify:${qualified}:${i}`,
+        kind: "fix", confidence: 0.9,
+        label: `Qualify '${bare}' → '${qualified}'`,
+        apply: (doc) => {
+          doc.edit((data) => {
+            for (const seq of data.sequence ?? []) {
+              const t = seq.trigger;
+              if (t && t.kind === "on_sequence_finished" && t.id === bare) t.id = qualified;
+            }
+          });
+        },
+      });
+    }
+    // Dangling on_sequence_finished: "... unknown sequence 'X'"
+    const d = /triggers on_sequence_finished of unknown sequence '([^']+)'/.exec(msg);
+    if (d) {
+      const missing = d[1];
+      const ids = (ctx.scene.sequence ?? []).map((s) => s.id).filter((id) => id !== missing);
+      const closest = nearestId(missing, ids);
+      if (closest) {
+        out.push({
+          id: `fix:retarget:${missing}:${i}`,
+          kind: "fix", confidence: 0.7,
+          label: `Point '${missing}' at '${closest}'`,
+          apply: (doc) => {
+            doc.edit((data) => {
+              for (const seq of data.sequence ?? []) {
+                const t = seq.trigger;
+                if (t && t.kind === "on_sequence_finished" && t.id === missing) t.id = closest;
+              }
+            });
+          },
+        });
+      }
+    }
+  }
+  return out;
+}
+
+/** Cheapest close-id heuristic: shortest edit-distance among candidates. */
+function nearestId(target: string, candidates: string[]): string | null {
+  let best: string | null = null, bestD = Infinity;
+  for (const c of candidates) {
+    const dst = editDistance(target, c);
+    if (dst < bestD) { bestD = dst; best = c; }
+  }
+  return best;
+}
+function editDistance(a: string, b: string): number {
+  const dp = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 0; j <= b.length; j++) dp[0][j] = j;
+  for (let i = 1; i <= a.length; i++)
+    for (let j = 1; j <= b.length; j++)
+      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  return dp[a.length][b.length];
+}
+
 export const ruleProvider: SuggestionProvider = {
   name: "rules",
   suggest: (ctx) =>
-    Promise.resolve([...nextBeatSuggestions(ctx), ...momentSuggestions(ctx)]),
+    Promise.resolve([
+      ...nextBeatSuggestions(ctx), ...momentSuggestions(ctx), ...fixSuggestions(ctx),
+    ]),
 };
 
 registerProvider(ruleProvider);

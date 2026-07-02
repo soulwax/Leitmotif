@@ -5,6 +5,8 @@
 // knows about the CLI. When running web-only (no Tauri), `invoke` is undefined and
 // the calls report a friendly "run inside Tauri" message instead of crashing.
 
+import type { Finding } from "./suggest";
+
 type Invoke = <T>(cmd: string, args?: Record<string, unknown>) => Promise<T>;
 
 async function getInvoke(): Promise<Invoke | null> {
@@ -44,6 +46,19 @@ async function call(cmd: string, args: Record<string, unknown>): Promise<BridgeR
 /** Deep-validate a scene file; returns the human-readable findings report. */
 export function validate(path: string): Promise<BridgeResult> {
   return call("choreo_validate", { path });
+}
+
+/** Structured findings for the Fix-it ribbon. Runs `choreo validate <path> --json`
+ * via the existing bridge and parses the array. Returns [] if unavailable. */
+export async function validateJson(path: string): Promise<Finding[]> {
+  const r = await call("choreo_validate_json", { path });
+  if (!r.ok) return [];
+  try {
+    const parsed = JSON.parse(r.output);
+    return Array.isArray(parsed) ? (parsed as Finding[]) : [];
+  } catch {
+    return [];
+  }
 }
 
 /** Headless scene timeline (JSON) for a sequence. */

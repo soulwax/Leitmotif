@@ -62,6 +62,12 @@ fn choreo_validate(path: String) -> Result<String, String> {
 }
 
 #[tauri::command]
+fn choreo_validate_json(path: String) -> Result<String, String> {
+    // --json always exits 0 and prints a JSON array; return stdout verbatim.
+    run_choreo(&["validate", &path, "--json"])
+}
+
+#[tauri::command]
 fn choreo_preview(
     path: String,
     sequence: String,
@@ -185,6 +191,7 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             choreo_validate,
+            choreo_validate_json,
             choreo_preview,
             choreo_schema,
             choreo_assets,
