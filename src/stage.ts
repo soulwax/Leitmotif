@@ -8,7 +8,7 @@
 // This is a renderer only — it takes a frame + a fit and paints. The transport
 // (play/scrub) lives in main.ts and just hands it different frames.
 
-import type { PreviewActor, PreviewFrame } from "./preview";
+import type { P2, PreviewActor, PreviewFrame } from "./preview";
 
 const THEME = {
   bg: "#0f0d15",
@@ -76,6 +76,28 @@ export function screenToWorld(
 
 function clamp(v: number, lo: number, hi: number): number {
   return v < lo ? lo : v > hi ? hi : v;
+}
+
+/** The visible actor nearest a world point, or null. Used to offer "Beside X"
+ * placement instead of a raw coordinate. */
+export function nearestActor(
+  frame: PreviewFrame | null,
+  x: number,
+  y: number,
+): { id: string; pos: P2 } | null {
+  if (!frame) return null;
+  let best: { id: string; pos: P2 } | null = null,
+    bestD = Infinity;
+  for (const a of frame.actors) {
+    if (!a.visible) continue;
+    const d = (a.pos.x - x) ** 2 + (a.pos.y - y) ** 2;
+    if (d < bestD) {
+      bestD = d;
+      best = { id: a.id, pos: a.pos };
+    }
+  }
+  // Only "snap" when reasonably close (within ~180 world units).
+  return best && bestD <= 180 * 180 ? best : null;
 }
 
 /** Draw a frame onto the stage: a foggy field, the camera frame, and the actors.

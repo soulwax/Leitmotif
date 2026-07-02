@@ -12,16 +12,17 @@ import {
   saveScene,
   saveSceneDialog,
   validate,
+  validateJson,
 } from "./bridge";
 import { SceneDoc, type Beat, type ChoreographyScene, type Sequence } from "./scene";
 import { buildBeatForm } from "./form";
 import { buildTriggerForm, type Trigger } from "./trigger";
 import { renderTimeline } from "./timeline";
-import { drawStage, screenToWorld } from "./stage";
+import { drawStage, nearestActor, screenToWorld } from "./stage";
 import { type PreviewFrame, duration, fetchTimeline, frameAt } from "./preview";
 import { loadAssets, actorIds, sfxIds } from "./assets";
 import { verbTakesWorldPoint } from "./vocab";
-import { suggestions, type SuggestContext } from "./suggest";
+import { suggestions, type Finding, type SuggestContext, type Suggestion } from "./suggest";
 import "./rules"; // registers the Tier-1 RuleProvider with the suggestion engine
 
 function $(id: string): HTMLElement {
@@ -34,6 +35,12 @@ const docName = $("doc-name");
 const seqList = $("sequence-list") as HTMLUListElement;
 const seqCount = $("seq-count");
 const validationOut = $("validation-output") as HTMLPreElement;
+// The Fix-it ribbon: a small list of findings + Fix / Fix-all buttons, injected
+// just above the existing validation output (no index.html change needed).
+const fixRibbon = document.createElement("div");
+fixRibbon.className = "fix-ribbon";
+fixRibbon.hidden = true;
+validationOut.parentElement?.insertBefore(fixRibbon, validationOut);
 const detailTitle = $("detail-title");
 const detailBody = $("detail-body");
 const timelineHost = $("timeline-host");
@@ -63,6 +70,11 @@ let playT = 0;
 let lastRaf = 0;
 /** Bumps each rebuild so a stale async preview result is ignored. */
 let previewToken = 0;
+
+// ── validation / fix-it state ────────────────────────────────────────────────
+/** Structured findings from the last `validateJson`, feeding both the Fix
+ * ribbon and `buildSuggestContext` (so `fixSuggestions` can see them). */
+let findings: Finding[] = [];
 
 // ── rendering ────────────────────────────────────────────────────────────────
 
@@ -266,9 +278,8 @@ function afterStructuralEdit(): void {
   void rebuildPreview();
 }
 
-/** Assemble a SuggestContext from the current doc/selection/assets/preview, for
- * the suggestion engine (Task 1). `findings` is wired to real diagnostics in a
- * later task; empty for now. */
+/** Assemble a SuggestContext from the current doc/selection/assets/preview/
+ * findings, for the suggestion engine. */
 function buildSuggestContext(stepIndex: number, selBeat: Beat | null): SuggestContext {
   return {
     scene: JSON.parse(doc.toJson()) as ChoreographyScene,
@@ -278,7 +289,7 @@ function buildSuggestContext(stepIndex: number, selBeat: Beat | null): SuggestCo
     actors: actorIds(),
     sfx: sfxIds(),
     frame: frames.length ? frameAt(frames, playT) : null,
-    findings: [],
+    findings,
   };
 }
 
@@ -305,6 +316,8 @@ function inspector(seq: Sequence, si: number, bi: number): HTMLElement {
   guide.textContent = `A single beat by ${actor}. Fill only what this action needs.`;
   panel.appendChild(guide);
 
+  panel.appendChild(buildSuggestedChip(seq, si, bi));
+
   // Edit a copy; commit through the doc so it owns state + dirty tracking. If the
   // verb changed, the card label changes too, so re-render the timeline.
   panel.appendChild(
@@ -317,6 +330,49 @@ function inspector(seq: Sequence, si: number, bi: number): HTMLElement {
     }),
   );
   return panel;
+}
+
+/** A gold "✦ Suggested" chip offering the top-confidence next-beat suggestion
+ * for the selected beat's step. Rendered hidden/empty first (no blocking on the
+ * async engine call), then populated — or removed — once `suggestions()`
+ * resolves. Stale-guarded: if the selection moved on before the promise
+ * resolves, the result is dropped. */
+function buildSuggestedChip(seq: Sequence, si: number, bi: number): HTMLElement {
+  const host = document.createElement("div");
+  host.className = "suggested-chip-host";
+
+  const ctx = buildSuggestContext(si, seq.step?.[si]?.beat?.[bi] ?? null);
+  void suggestions(ctx).then((all) => {
+    // Stale-guard: bail if the selection has since changed.
+    if (!selectedBeat || selectedBeat[0] !== si || selectedBeat[1] !== bi) return;
+    if (selectedSeq !== seq.id) return;
+    const top = all
+      .filter((s) => s.kind === "beat")
+      .sort((a, b) => b.confidence - a.confidence)[0];
+    if (!top) return; // no-op: leave the host empty
+    host.appendChild(suggestedChipButton(top, seq.id, si, bi));
+  });
+
+  return host;
+}
+
+function suggestedChipButton(s: Suggestion, seqId: string, si: number, bi: number): HTMLElement {
+  const chip = document.createElement("button");
+  chip.type = "button";
+  chip.className = "suggested-chip";
+  chip.title = s.detail ?? s.label;
+  const mark = document.createElement("span");
+  mark.className = "suggested-chip-mark";
+  mark.textContent = "✦";
+  chip.append(mark, ` Suggested: ${s.label}`);
+  chip.addEventListener("click", () => {
+    // Stale-guard: only apply if this is still the selected beat.
+    if (!selectedSeq || selectedSeq !== seqId) return;
+    if (!selectedBeat || selectedBeat[0] !== si || selectedBeat[1] !== bi) return;
+    s.apply(doc);
+    afterStructuralEdit();
+  });
+  return chip;
 }
 
 function emptyNote(text: string): HTMLElement {
@@ -422,15 +478,31 @@ function canPlaceOnStage(): boolean {
   return !!b && verbTakesWorldPoint(b.do);
 }
 
-/** Set the selected placeable beat's x/y from a stage click. Returns true if it
- * placed. */
+/** How far off an actor's own position a "beside them" placement lands, in
+ * world units — enough to not overlap the marker, small enough to still read
+ * as "next to". */
+const SNAP_STANDOFF = 40;
+
+/** Set the selected placeable beat's x/y from a stage click. Snaps to "beside"
+ * a nearby visible actor when the click lands close to one, so a writer gets a
+ * legible destination instead of a raw coordinate. Returns true if it placed. */
 function placeSelectedBeatAt(clientX: number, clientY: number): boolean {
   if (!selectedSeq || !selectedBeat) return false;
   const b = currentBeat();
   if (!b || !verbTakesWorldPoint(b.do)) return false;
   const { x, y } = screenToWorld(stageCanvas, clientX, clientY);
   const [si, bi] = selectedBeat;
-  const next: Beat = { ...b, x, y };
+
+  const near = nearestActor(frames.length ? frameAt(frames, playT) : null, x, y);
+  let placeX = x;
+  let placeY = y;
+  if (near) {
+    placeX = near.pos.x + SNAP_STANDOFF;
+    placeY = near.pos.y;
+    stageMsg.textContent = `Beside ${near.id}`;
+  }
+
+  const next: Beat = { ...b, x: placeX, y: placeY };
   // walk_in to a fixed point means dropping any actor-standoff target.
   if (b.do === "walk_in") delete next.target;
   doc.replaceBeat(selectedSeq, si, bi, next);
@@ -524,14 +596,94 @@ async function doSave(saveAs: boolean): Promise<void> {
   setValidation(`Saved ${path}`);
 }
 
+/** Bumps each validate run so a stale async findings/ribbon result is ignored. */
+let validateToken = 0;
+
 async function runValidate(): Promise<void> {
   if (!doc.path) {
     setValidation("Save the scene first, then validate.");
+    findings = [];
+    void renderFixRibbon([]);
     return;
   }
+  const token = ++validateToken;
   setValidation("Validating…");
-  const r = await validate(doc.path);
+  const [r, structured] = await Promise.all([validate(doc.path), validateJson(doc.path)]);
+  if (token !== validateToken) return; // superseded by a newer validate
   setValidation(r.output, !r.ok);
+  findings = structured;
+  await renderFixRibbon(structured);
+}
+
+/** Render the Fix-it ribbon: one row per finding, a "Fix" button when the
+ * engine offers a matching one-click repair, and a "Fix all" button when two
+ * or more fixes are available. Findings with no fix render as plain text. */
+async function renderFixRibbon(list: Finding[]): Promise<void> {
+  if (list.length === 0) {
+    fixRibbon.innerHTML = "";
+    fixRibbon.hidden = true;
+    return;
+  }
+  const token = validateToken;
+  const ctx = buildSuggestContext(selectedBeat?.[0] ?? 0, currentBeat());
+  let fixes: Suggestion[] = [];
+  try {
+    fixes = (await suggestions(ctx)).filter((s) => s.kind === "fix");
+  } catch {
+    fixes = [];
+  }
+  if (token !== validateToken) return; // a newer validate superseded this render
+
+  fixRibbon.innerHTML = "";
+  fixRibbon.hidden = false;
+
+  if (fixes.length > 1) {
+    const fixAll = document.createElement("button");
+    fixAll.type = "button";
+    fixAll.className = "small fix-all";
+    fixAll.textContent = `Fix all (${fixes.length})`;
+    fixAll.addEventListener("click", () => {
+      for (const fix of fixes) fix.apply(doc);
+      afterStructuralEdit();
+      void runValidate();
+    });
+    fixRibbon.appendChild(fixAll);
+  }
+
+  for (const finding of list) {
+    const row = document.createElement("div");
+    row.className = "fix-row" + (finding.level === "error" ? " error" : "");
+
+    const msg = document.createElement("span");
+    msg.className = "fix-row-msg";
+    msg.textContent = finding.message;
+    row.appendChild(msg);
+
+    const fix = matchingFix(fixes, finding);
+    if (fix) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "small fix-row-btn";
+      btn.textContent = "Fix";
+      btn.title = fix.label;
+      btn.addEventListener("click", () => {
+        fix.apply(doc);
+        afterStructuralEdit();
+        void runValidate();
+      });
+      row.appendChild(btn);
+    }
+    fixRibbon.appendChild(row);
+  }
+}
+
+/** `fixSuggestions` derives one-click fixes from `ctx.findings` by array index
+ * (its suggestion ids embed that index — see rules.ts), so pairing them back up
+ * with the finding they came from is a simple index match. */
+function matchingFix(fixes: Suggestion[], finding: Finding): Suggestion | undefined {
+  const i = findings.indexOf(finding);
+  if (i < 0) return undefined;
+  return fixes.find((f) => f.id.endsWith(`:${i}`));
 }
 
 /** Publish the scene to the game: validate, then (only if clean) write the .toml
@@ -551,6 +703,8 @@ function doNew(): void {
   doc = SceneDoc.empty();
   selectedSeq = null;
   selectedBeat = null;
+  findings = [];
+  void renderFixRibbon([]);
   renderAll();
   void rebuildPreview();
   setValidation("—");

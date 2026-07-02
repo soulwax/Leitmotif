@@ -869,3 +869,93 @@ main {
 .validation-ribbon .output.error {
   color: var(--warn);
 }
+
+/* suggested chip (inspector) — a one-click "director's assistant" nudge */
+
+.suggested-chip-host {
+  min-height: 0;
+}
+
+.suggested-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin-bottom: 14px;
+  padding: 9px 13px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(216, 178, 104, 0.16), rgba(216, 178, 104, 0.06));
+  border: 1px solid rgba(216, 178, 104, 0.4);
+  color: var(--gold-lit);
+  font: 500 12.5px var(--sans);
+  text-align: left;
+  cursor: pointer;
+}
+.suggested-chip:hover {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, rgba(216, 178, 104, 0.24), rgba(216, 178, 104, 0.1));
+  color: var(--gold-lit);
+}
+
+.suggested-chip-mark {
+  color: var(--gold);
+  font-size: 13px;
+}
+
+/* fix-it ribbon — sits above the validation output, fed by validate --json */
+
+.fix-ribbon {
+  flex: none;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 8px;
+}
+
+.fix-ribbon:empty,
+.fix-ribbon[hidden] {
+  display: none;
+}
+
+.fix-all {
+  align-self: flex-start;
+  border-color: var(--gold);
+  color: var(--gold-lit);
+}
+.fix-all:hover {
+  background: var(--gold);
+  color: #20180a;
+}
+
+.fix-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.fix-row.error {
+  color: var(--warn);
+}
+
+.fix-row-msg {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.fix-row-btn {
+  flex: none;
+  border-color: var(--teal);
+  color: var(--teal);
+}
+.fix-row-btn:hover {
+  background: var(--teal);
+  color: #0f0d15;
+}
