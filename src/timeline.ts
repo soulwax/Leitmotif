@@ -23,6 +23,8 @@ export interface TimelineCallbacks {
   moveBeat: (fromStep: number, fromBeat: number, toStep: number, toIndex: number) => void;
   /** Build the contextual "next beat" suggestions for this step (may be empty). */
   suggestBeatsFor?: (stepIndex: number) => Promise<Suggestion[]>;
+  /** Build the ready-made "moment" suggestions for this step (may be empty). */
+  suggestMomentsFor?: (stepIndex: number) => Promise<Suggestion[]>;
   /** Apply a chosen suggestion. */
   applySuggestion?: (s: Suggestion) => void;
   /** Add a blank beat of a specific verb. */
@@ -205,8 +207,8 @@ async function openAddBeatPicker(
   loading.textContent = "Thinking…";
   picker.appendChild(loading);
 
-  anchorPicker(picker, anchor);
   document.body.appendChild(picker);
+  anchorPicker(picker, anchor);
   openPicker = picker;
 
   const closeAndCleanup = (): void => closeAnyOpenPicker();
@@ -288,6 +290,50 @@ async function openAddBeatPicker(
     verbList.appendChild(btn);
   });
   picker.appendChild(verbList);
+
+  anchorPicker(picker, anchor);
+
+  let moments: Suggestion[] = [];
+  try {
+    moments = cb.suggestMomentsFor ? await cb.suggestMomentsFor(si) : [];
+  } catch {
+    moments = [];
+  }
+  // The picker may have been closed (or reopened elsewhere) while awaiting.
+  if (openPicker !== picker) return;
+
+  if (moments.length > 0) {
+    const momentDivider = document.createElement("div");
+    momentDivider.className = "tl-picker-divider";
+    picker.appendChild(momentDivider);
+
+    const momentHeading = document.createElement("div");
+    momentHeading.className = "tl-picker-heading";
+    momentHeading.textContent = "Insert a moment";
+    picker.appendChild(momentHeading);
+
+    moments.forEach((s) => {
+      const row = document.createElement("button");
+      row.className = "tl-picker-row tl-picker-suggestion";
+      const label = document.createElement("span");
+      label.className = "tl-picker-row-label";
+      label.textContent = s.label;
+      row.appendChild(label);
+      if (s.detail) {
+        const detail = document.createElement("span");
+        detail.className = "tl-picker-row-detail";
+        detail.textContent = s.detail;
+        row.appendChild(detail);
+      }
+      row.addEventListener("click", () => {
+        cb.applySuggestion?.(s);
+        closeAnyOpenPicker();
+      });
+      picker.appendChild(row);
+    });
+
+    anchorPicker(picker, anchor);
+  }
 }
 
 let openPicker: HTMLElement | null = null;
@@ -300,10 +346,16 @@ function closeAnyOpenPicker(): void {
   openPicker = null;
 }
 
-/** Position `picker` just under `anchor`, clamped to the viewport. */
+/** Position `picker` just under `anchor`, clamped to the viewport. `picker`
+ * must already be attached to the DOM so its current size can be measured —
+ * call this again after the picker's content changes size (e.g. once its
+ * async content replaces the "Thinking…" placeholder) to re-clamp. */
 function anchorPicker(picker: HTMLElement, anchor: HTMLElement): void {
   picker.style.position = "fixed";
   const rect = anchor.getBoundingClientRect();
-  picker.style.left = `${Math.round(rect.left)}px`;
-  picker.style.top = `${Math.round(rect.bottom + 4)}px`;
+  const pickerRect = picker.getBoundingClientRect();
+  const left = Math.max(4, Math.min(rect.left, window.innerWidth - pickerRect.width - 4));
+  const top = Math.max(4, Math.min(rect.bottom + 4, window.innerHeight - pickerRect.height - 4));
+  picker.style.left = `${Math.round(left)}px`;
+  picker.style.top = `${Math.round(top)}px`;
 }

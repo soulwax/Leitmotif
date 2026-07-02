@@ -242,6 +242,11 @@ function renderDetail(): void {
       const all = await suggestions(ctx);
       return all.filter((s) => s.kind === "beat");
     },
+    suggestMomentsFor: async (si) => {
+      if (!selectedSeq) return [];
+      const all = await suggestions(buildSuggestContext(si, null));
+      return all.filter((s) => s.kind === "moment");
+    },
     applySuggestion: (s) => {
       s.apply(doc);
       afterStructuralEdit();
