@@ -15,6 +15,7 @@ import {
   validateJson,
 } from "./bridge";
 import { SceneDoc, type Beat, type ChoreographyScene, type Sequence } from "./scene";
+import { Project } from "./project";
 import { buildBeatForm } from "./form";
 import { buildTriggerForm, type Trigger } from "./trigger";
 import { renderTimeline } from "./timeline";
@@ -60,6 +61,8 @@ const btnUndo = $("btn-undo") as HTMLButtonElement;
 const btnRedo = $("btn-redo") as HTMLButtonElement;
 
 let doc: SceneDoc = SceneDoc.empty();
+// @ts-expect-error unused until Task 5 (canvas) reads it as the source of truth
+let project: Project = Project.empty();
 let selectedSeq: string | null = null;
 /** The beat currently open in the inspector, as [stepIndex, beatIndex]. */
 let selectedBeat: [number, number] | null = null;
