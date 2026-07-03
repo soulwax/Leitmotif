@@ -33,6 +33,7 @@ export interface Sequence {
 
 export interface ChoreographyScene {
   schema?: number;
+  scene?: string;
   sequence?: Sequence[];
   gestures?: Record<string, unknown>;
 }
