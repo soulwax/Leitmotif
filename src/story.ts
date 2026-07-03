@@ -146,13 +146,17 @@ function drawEdge(
 }
 
 /** Draw the whole graph. `hoveredScene` highlights a node + its edges. Returns the
- *  layout so the caller can hit-test with the same positions. */
+ *  layout so the caller can hit-test with the same positions. When `presetLayout` is
+ *  passed (e.g. the sidecar-merged or in-progress-drag layout), it is drawn instead of
+ *  recomputing one — so the drawn layout and the caller's hit-test layout stay the
+ *  same object (2B-1 callers that omit it are unaffected). */
 export function renderStoryCanvas(
   canvas: HTMLCanvasElement,
   graph: StoryGraph,
   hoveredScene: string | null,
+  presetLayout?: StoryLayout,
 ): StoryLayout {
-  const layout = layoutGraph(graph);
+  const layout = presetLayout ?? layoutGraph(graph);
   const ctx = canvas.getContext("2d");
   if (!ctx) return layout;
   ctx.clearRect(0, 0, canvas.width, canvas.height);

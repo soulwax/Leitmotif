@@ -9,10 +9,13 @@ import {
   exportScene,
   loadScene,
   openSceneDialog,
+  readLayout,
   saveScene,
   saveSceneDialog,
+  sceneGraph,
   validate,
   validateJson,
+  writeLayout,
 } from "./bridge";
 import { SceneDoc, type Beat, type ChoreographyScene, type Sequence } from "./scene";
 import { Project } from "./project";
@@ -22,6 +25,8 @@ import { renderTimeline } from "./timeline";
 import { drawStage, nearestActor, screenToWorld } from "./stage";
 import { type PreviewFrame, duration, fetchTimeline, frameAt } from "./preview";
 import { renderStoryCanvas, layoutGraph, nodeAt, type StoryLayout } from "./story";
+import { mergeLayout, parseSavedLayout, type SavedLayout } from "./layout_store";
+import { openContextMenu, type MenuItem } from "./menu";
 import { loadAssets, actorIds, sfxIds } from "./assets";
 import { verbTakesWorldPoint } from "./vocab";
 import { suggestions, type Finding, type SuggestContext, type Suggestion } from "./suggest";
@@ -74,6 +79,14 @@ let project: Project = Project.empty();
 let mode: "story" | "scene" = "scene";
 let storyLayout: StoryLayout | null = null;
 let hoveredScene: string | null = null;
+/** The layout sidecar loaded for the current project folder (null = none/unopened).
+ *  Merged over the auto-layout in `renderStory`; mutated + rewritten as the user
+ *  drags nodes, adds scenes, or auto-arranges. */
+let savedLayout: SavedLayout | null = null;
+/** In-progress node drag: which scene, the pointer's offset from its top-left corner
+ *  (so the node doesn't jump to the cursor), and whether it has moved past the
+ *  click-vs-drag threshold. */
+let drag: { scene: string; dx: number; dy: number; moved: boolean } | null = null;
 let selectedSeq: string | null = null;
 /** The beat currently open in the inspector, as [stepIndex, beatIndex]. */
 let selectedBeat: [number, number] | null = null;
@@ -439,8 +452,8 @@ function fitStoryCanvas(): void {
 }
 
 /** Show/hide the story workspace vs. the editor, and (in story mode) draw the
- * graph. Read-only this slice: click opens a scene in the editor, hover
- * highlights a node — no drag, no CRUD. Safe to call with an empty graph. */
+ * graph. Drag repositions a node (persisted to the .leitmotif sidecar);
+ * right-click opens card/canvas CRUD menus. Safe to call with an empty graph. */
 function renderStory(): void {
   const inStory = mode === "story";
   storyView.classList.toggle("hidden", !inStory);
@@ -449,21 +462,133 @@ function renderStory(): void {
   if (!inStory) return;
   // Compute the layout BEFORE sizing so fitStoryCanvas() sees the graph's real
   // dimensions on the very first open (otherwise a graph wider/taller than the
-  // viewport clips until the next resize/toggle). renderStoryCanvas draws against
-  // the same deterministic layout.
-  storyLayout = layoutGraph(project.graph);
+  // viewport clips until the next resize/toggle). The sidecar's saved positions
+  // win per-scene over the deterministic auto-layout; renderStoryCanvas draws
+  // THIS object (not a freshly recomputed one) so the drawn layout and the
+  // hit-test layout used by drag/hover/contextmenu are always the same instance.
+  storyLayout = mergeLayout(layoutGraph(project.graph), savedLayout);
   fitStoryCanvas();
-  renderStoryCanvas(storyCanvas, project.graph, hoveredScene);
+  renderStoryCanvas(storyCanvas, project.graph, hoveredScene, storyLayout);
 }
 
 /** Open a project folder: derive it from the existing file-open dialog (no new
- * Tauri dialog command), load every scene under it, and switch to story mode. */
+ * Tauri dialog command), load every scene under it, load its layout sidecar, and
+ * switch to story mode. */
 async function doOpenFolder(): Promise<void> {
   const path = await openSceneDialog();
   if (!path) return;
   const folder = path.replace(/[\\/][^\\/]*$/, "");
   project = await Project.open(folder);
+  savedLayout = parseSavedLayout(await readLayout(folder));
   mode = "story";
+  renderStory();
+}
+
+/** Factored out of the old story-canvas click handler so both a plain click and
+ * the card menu's "Open" item can open a scene in the single-scene editor. */
+function openSceneInEditor(scene: string): void {
+  const d = project.doc(scene);
+  if (!d) return;
+  doc = d;
+  project.setActive(scene);
+  mode = "scene";
+  selectedSeq = null;
+  selectedBeat = null;
+  renderDocName();
+  renderSequences();
+  renderDetail();
+  void rebuildPreview();
+  renderStory();
+}
+
+/** Debounced layout sidecar persist (called on drag-end so a rapid succession of
+ * drags doesn't spam the filesystem). */
+let layoutSaveTimer: number | undefined;
+function persistLayoutDebounced(): void {
+  window.clearTimeout(layoutSaveTimer);
+  layoutSaveTimer = window.setTimeout(() => void persistLayout(), 300);
+}
+
+/** Write the current `storyLayout` positions to the .leitmotif sidecar. A write
+ * failure degrades to a stageMsg notice — never throws, never blocks the UI. */
+async function persistLayout(): Promise<void> {
+  if (!project.folderPath || !storyLayout) return;
+  const positions: Record<string, { x: number; y: number }> = {};
+  for (const [scene, p] of storyLayout.pos) positions[scene] = { x: Math.round(p.x), y: Math.round(p.y) };
+  savedLayout = { version: 1, positions };
+  const r = await writeLayout(project.folderPath, JSON.stringify(savedLayout));
+  if (!r.ok) stageMsg.textContent = "Couldn't save layout.";
+}
+
+/** Re-fetch the resolved story graph (edges are ALWAYS derived from `choreo graph`,
+ * never hand-maintained) and redraw. Call after any successful CRUD op. */
+async function refreshAfterCrud(): Promise<void> {
+  if (project.folderPath) project.graph = await sceneGraph(project.folderPath);
+  renderStory();
+}
+
+/** Ids restricted to a filesystem-safe set: letters, digits, `-`, `_`. Rejects
+ * empty strings and anything containing a path separator or `..` traversal
+ * before it ever reaches `Project.pathFor` (which does no sanitization of its
+ * own — this is the guard). */
+function isValidSceneId(id: string): boolean {
+  return /^[A-Za-z0-9_-]+$/.test(id);
+}
+
+async function newSceneFlow(x: number, y: number): Promise<void> {
+  const id = await promptText("New scene id", "");
+  if (!id) return;
+  if (!isValidSceneId(id)) {
+    stageMsg.textContent = "Use letters, numbers, - or _ for a scene id.";
+    return;
+  }
+  if (project.hasScene(id)) {
+    stageMsg.textContent = `A scene '${id}' already exists.`;
+    return;
+  }
+  if (await project.createScene(id)) {
+    savedLayout = savedLayout ?? { version: 1, positions: {} };
+    savedLayout.positions[id] = { x, y };
+    await writeLayout(project.folderPath!, JSON.stringify(savedLayout));
+    await refreshAfterCrud();
+  } else {
+    stageMsg.textContent = "Couldn't create the scene.";
+  }
+}
+
+async function renameSceneFlow(scene: string): Promise<void> {
+  const id = await promptText("Rename scene", scene);
+  if (!id || id === scene) return;
+  if (!isValidSceneId(id)) {
+    stageMsg.textContent = "Use letters, numbers, - or _ for a scene id.";
+    return;
+  }
+  if (project.hasScene(id)) {
+    stageMsg.textContent = `A scene '${id}' already exists.`;
+    return;
+  }
+  if (await project.renameScene(scene, id)) await refreshAfterCrud();
+  else stageMsg.textContent = "Rename failed.";
+}
+
+async function duplicateSceneFlow(scene: string): Promise<void> {
+  const id = await project.duplicateScene(scene);
+  if (id) await refreshAfterCrud();
+  else stageMsg.textContent = "Couldn't duplicate.";
+}
+
+async function deleteSceneFlow(scene: string): Promise<void> {
+  if (!(await confirmDialog(`Delete '${scene}'? This removes the file.`))) return;
+  if (await project.deleteScene(scene)) await refreshAfterCrud();
+  else stageMsg.textContent = "Delete failed.";
+}
+
+/** Clear the sidecar back to a pure auto-layout, snapshot it, persist, and redraw. */
+async function autoArrange(): Promise<void> {
+  savedLayout = { version: 1, positions: {} };
+  const auto = layoutGraph(project.graph);
+  for (const [s, p] of auto.pos) savedLayout.positions[s] = { x: Math.round(p.x), y: Math.round(p.y) };
+  if (project.folderPath) await writeLayout(project.folderPath, JSON.stringify(savedLayout));
   renderStory();
 }
 
@@ -477,6 +602,118 @@ function toggleStoryMode(): void {
  * slice has no zoom, so fitting just means "back to the top-left"). */
 function fitStoryView(): void {
   storyView.scrollTo({ left: 0, top: 0 });
+}
+
+// ── in-app prompt / confirm dialogs ──────────────────────────────────────────
+// Small promise-based modal helpers used by the story-canvas CRUD flows. The
+// Tauri WebView's `window.prompt`/`confirm` are unreliable, so these build a
+// minimal centered overlay instead (`.lm-dialog`, styled in style.css).
+
+/** Ask for a short line of text. Resolves to the trimmed value, or null if the
+ * user cancels (Escape, backdrop click, or the Cancel button). Enter confirms. */
+function promptText(title: string, initial: string): Promise<string | null> {
+  return new Promise((resolve) => {
+    const { backdrop, box, close } = buildDialogShell(title, resolve);
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "lm-dialog-input";
+    input.value = initial;
+    box.appendChild(input);
+
+    const actions = document.createElement("div");
+    actions.className = "lm-dialog-actions";
+    const cancelBtn = document.createElement("button");
+    cancelBtn.type = "button";
+    cancelBtn.className = "ghost";
+    cancelBtn.textContent = "Cancel";
+    cancelBtn.addEventListener("click", () => close(null));
+    const okBtn = document.createElement("button");
+    okBtn.type = "button";
+    okBtn.className = "gold";
+    okBtn.textContent = "OK";
+    okBtn.addEventListener("click", () => close(input.value.trim() || null));
+    actions.append(cancelBtn, okBtn);
+    box.appendChild(actions);
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") close(input.value.trim() || null);
+      if (e.key === "Escape") close(null);
+    });
+
+    document.body.appendChild(backdrop);
+    input.focus();
+    input.select();
+  });
+}
+
+/** Ask for a yes/no confirmation. Resolves true only if the user picks the
+ * affirmative action; Escape/backdrop/Cancel all resolve false. */
+function confirmDialog(message: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    const { backdrop, box, close } = buildDialogShell<boolean>("Confirm", (v) => resolve(v ?? false));
+
+    const msg = document.createElement("p");
+    msg.className = "lm-dialog-msg";
+    msg.textContent = message;
+    box.appendChild(msg);
+
+    const actions = document.createElement("div");
+    actions.className = "lm-dialog-actions";
+    const cancelBtn = document.createElement("button");
+    cancelBtn.type = "button";
+    cancelBtn.className = "ghost";
+    cancelBtn.textContent = "Cancel";
+    cancelBtn.addEventListener("click", () => close(false));
+    const okBtn = document.createElement("button");
+    okBtn.type = "button";
+    okBtn.className = "gold";
+    okBtn.textContent = "Delete";
+    okBtn.addEventListener("click", () => close(true));
+    actions.append(cancelBtn, okBtn);
+    box.appendChild(actions);
+
+    document.body.appendChild(backdrop);
+    okBtn.focus();
+  });
+}
+
+/** Shared overlay + panel + title scaffold for `promptText`/`confirmDialog`.
+ * `close(value)` removes the overlay, tears down listeners, and settles the
+ * caller's promise exactly once. Escape and a backdrop click both close with
+ * `null` (cancel). */
+function buildDialogShell<T>(
+  title: string,
+  settle: (value: T | null) => void,
+): { backdrop: HTMLElement; box: HTMLElement; close: (value: T | null) => void } {
+  const backdrop = document.createElement("div");
+  backdrop.className = "lm-dialog-backdrop";
+  const box = document.createElement("div");
+  box.className = "lm-dialog";
+  backdrop.appendChild(box);
+
+  const head = document.createElement("div");
+  head.className = "lm-dialog-title";
+  head.textContent = title;
+  box.appendChild(head);
+
+  let settled = false;
+  function close(value: T | null): void {
+    if (settled) return;
+    settled = true;
+    document.removeEventListener("keydown", onEscape);
+    backdrop.remove();
+    settle(value);
+  }
+  function onEscape(e: KeyboardEvent): void {
+    if (e.key === "Escape") close(null);
+  }
+  document.addEventListener("keydown", onEscape);
+  backdrop.addEventListener("mousedown", (e) => {
+    if (e.target === backdrop) close(null);
+  });
+
+  return { backdrop, box, close };
 }
 
 function setValidation(text: string, isError = false): void {
@@ -917,28 +1154,70 @@ btnRedo.addEventListener("click", doRedo);
 btnOpenFolder.addEventListener("click", () => void doOpenFolder());
 btnStoryToggle.addEventListener("click", toggleStoryMode);
 btnStoryFit.addEventListener("click", fitStoryView);
-storyCanvas.addEventListener("click", (e) => {
-  const scene = storyLayout ? nodeAt(storyLayout, e.offsetX, e.offsetY) : null;
+storyCanvas.addEventListener("mousedown", (e) => {
+  if (e.button !== 0 || !storyLayout) return;
+  const scene = nodeAt(storyLayout, e.offsetX, e.offsetY);
   if (!scene) return;
-  const d = project.doc(scene);
-  if (!d) return;
-  doc = d;
-  project.setActive(scene);
-  mode = "scene";
-  selectedSeq = null;
-  selectedBeat = null;
-  renderDocName();
-  renderSequences();
-  renderDetail();
-  void rebuildPreview();
-  renderStory();
+  const p = storyLayout.pos.get(scene)!;
+  drag = { scene, dx: e.offsetX - p.x, dy: e.offsetY - p.y, moved: false };
 });
 storyCanvas.addEventListener("mousemove", (e) => {
+  if (drag && storyLayout) {
+    const nx = e.offsetX - drag.dx;
+    const ny = e.offsetY - drag.dy;
+    const p0 = storyLayout.pos.get(drag.scene)!;
+    if (Math.abs(nx - p0.x) > 4 || Math.abs(ny - p0.y) > 4) drag.moved = true;
+    storyLayout.pos.set(drag.scene, { x: Math.max(0, nx), y: Math.max(0, ny) });
+    storyCanvas.classList.add("grabbing");
+    renderStoryCanvas(storyCanvas, project.graph, hoveredScene, storyLayout);
+    return;
+  }
+  // hover (unchanged)
   const scene = storyLayout ? nodeAt(storyLayout, e.offsetX, e.offsetY) : null;
-  if (scene === hoveredScene) return;
-  hoveredScene = scene;
-  storyCanvas.style.cursor = scene ? "pointer" : "default";
-  storyLayout = renderStoryCanvas(storyCanvas, project.graph, hoveredScene);
+  if (scene !== hoveredScene) {
+    hoveredScene = scene;
+    storyCanvas.style.cursor = scene ? "pointer" : "default";
+    if (storyLayout) renderStoryCanvas(storyCanvas, project.graph, hoveredScene, storyLayout);
+  }
+});
+storyCanvas.addEventListener("mouseup", () => {
+  if (!drag) return;
+  const d = drag;
+  drag = null;
+  storyCanvas.classList.remove("grabbing");
+  if (!d.moved) {
+    // treat as a click → open the scene (2B-1 behavior)
+    openSceneInEditor(d.scene);
+    return;
+  }
+  // drag-end → persist position (debounced)
+  persistLayoutDebounced();
+});
+storyCanvas.addEventListener("mouseleave", () => {
+  // Pointer left the canvas mid-drag: stop dragging but keep the moved position
+  // (still persisted) rather than leaving `drag` dangling with no matching mouseup.
+  if (!drag) return;
+  const moved = drag.moved;
+  drag = null;
+  storyCanvas.classList.remove("grabbing");
+  if (moved) persistLayoutDebounced();
+});
+storyCanvas.addEventListener("contextmenu", (e) => {
+  e.preventDefault();
+  const scene = storyLayout ? nodeAt(storyLayout, e.offsetX, e.offsetY) : null;
+  const items: MenuItem[] = scene
+    ? [
+        { label: "Open", run: () => openSceneInEditor(scene) },
+        { label: "Rename…", run: () => void renameSceneFlow(scene) },
+        { label: "Duplicate", run: () => void duplicateSceneFlow(scene) },
+        { label: "Delete…", run: () => void deleteSceneFlow(scene) },
+      ]
+    : [
+        { label: "New scene…", run: () => void newSceneFlow(e.offsetX, e.offsetY) },
+        { label: "Auto-arrange", run: () => void autoArrange() },
+        { label: "Fit to view", run: () => fitStoryView() },
+      ];
+  openContextMenu(e.clientX, e.clientY, items);
 });
 
 // transport

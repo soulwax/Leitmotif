@@ -202,6 +202,112 @@ button:disabled:hover {
 
 #story-canvas {
   display: block;
+  cursor: default;
+}
+
+/* dragging a node: same "grabbing" affordance as the timeline's step-head drag */
+#story-canvas.grabbing {
+  cursor: grabbing;
+}
+
+/* ── right-click context menu (menu.ts) ── */
+/* One instance at a time, fixed + viewport-clamped by menu.ts; card menus (Open/
+   Rename/Duplicate/Delete) and the canvas menu (New scene/Auto-arrange/Fit) share
+   this styling. */
+
+.ctx-menu {
+  position: fixed;
+  z-index: 60;
+  min-width: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  border-radius: 10px;
+  background: var(--panel);
+  border: 1px solid var(--line-2);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+}
+
+.ctx-menu-item {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 7px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  color: var(--ink);
+  font: 500 12.5px var(--sans);
+}
+
+.ctx-menu-item:hover:not(:disabled) {
+  background: var(--panel-2);
+  color: var(--gold);
+  border-color: transparent;
+}
+
+.ctx-menu-item:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ── in-app prompt / confirm dialog (main.ts: promptText / confirmDialog) ── */
+/* Replaces window.prompt/confirm, which the Tauri WebView doesn't reliably
+   support. Mirrors the keyboard cheat-sheet overlay's backdrop treatment. */
+
+.lm-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 9, 14, 0.6);
+  backdrop-filter: blur(2px);
+}
+
+.lm-dialog {
+  width: 340px;
+  max-width: calc(100vw - 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  background: var(--panel);
+  border: 1px solid var(--line-2);
+  border-radius: 13px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.5);
+}
+
+.lm-dialog-title {
+  font: 600 14px var(--sans);
+  color: var(--ink-bright);
+}
+
+.lm-dialog-msg {
+  font: 400 13px/1.5 var(--sans);
+  color: var(--ink);
+}
+
+.lm-dialog-input {
+  width: 100%;
+  background: var(--panel-2);
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: var(--ink);
+  font: 400 13px var(--sans);
+}
+
+.lm-dialog-input:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.lm-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 /* ── main layout: sequences | center (stage over timeline) | inspector ── */
