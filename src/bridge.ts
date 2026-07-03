@@ -121,6 +121,23 @@ export function saveScene(path: string, json: string): Promise<BridgeResult> {
   return call("save_scene", { path, json });
 }
 
+/** The editor layout sidecar JSON for a folder ("" if absent or on any failure). */
+export async function readLayout(folder: string): Promise<string> {
+  const r = await call("read_layout", { folder });
+  return r.ok ? r.output : "";
+}
+
+/** Persist the layout sidecar. Degrades to a failed BridgeResult (caller shows a
+ *  non-blocking notice) — never throws. */
+export function writeLayout(folder: string, json: string): Promise<BridgeResult> {
+  return call("write_layout", { folder, json });
+}
+
+/** Delete a scene .toml file. Degrades to a failed BridgeResult on error. */
+export function deleteSceneFile(path: string): Promise<BridgeResult> {
+  return call("delete_scene_file", { path });
+}
+
 /** Export to the game: validates first, then writes. Refuses to write an invalid
  * scene (the returned error carries the human findings). */
 export function exportScene(path: string, json: string): Promise<BridgeResult> {

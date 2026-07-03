@@ -161,6 +161,31 @@ fn save_scene(path: String, json: String) -> Result<String, String> {
     result.map(|_| format!("saved {path}"))
 }
 
+/// The editor layout sidecar. Absent file is not an error — return "" so the UI
+/// falls back to auto-layout.
+#[tauri::command]
+fn read_layout(folder: String) -> Result<String, String> {
+    let p = std::path::Path::new(&folder).join(".leitmotif").join("layout.json");
+    match std::fs::read_to_string(&p) {
+        Ok(s) => Ok(s),
+        Err(_) => Ok(String::new()),
+    }
+}
+
+#[tauri::command]
+fn write_layout(folder: String, json: String) -> Result<String, String> {
+    let dir = std::path::Path::new(&folder).join(".leitmotif");
+    std::fs::create_dir_all(&dir).map_err(|e| format!("create .leitmotif: {e}"))?;
+    std::fs::write(dir.join("layout.json"), json).map_err(|e| format!("write layout: {e}"))?;
+    Ok("ok".to_string())
+}
+
+#[tauri::command]
+fn delete_scene_file(path: String) -> Result<String, String> {
+    std::fs::remove_file(&path).map_err(|e| format!("delete '{path}': {e}"))?;
+    Ok("ok".to_string())
+}
+
 /// Export a scene to the game: **validate first, then write**. This is the
 /// deliberate "publish to the game" act — it refuses to write a scene the game
 /// couldn't play, so a writer can never break the running game from the editor.
@@ -225,6 +250,9 @@ fn main() {
             choreo_convert,
             load_scene,
             save_scene,
+            read_layout,
+            write_layout,
+            delete_scene_file,
             export_scene,
             preview_scene,
         ])
