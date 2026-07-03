@@ -567,8 +567,17 @@ async function renameSceneFlow(scene: string): Promise<void> {
     stageMsg.textContent = `A scene '${id}' already exists.`;
     return;
   }
-  if (await project.renameScene(scene, id)) await refreshAfterCrud();
-  else stageMsg.textContent = "Rename failed.";
+  if (await project.renameScene(scene, id)) {
+    // Carry the dragged position to the new id and drop the stale key, so a rename
+    // keeps the node where the writer put it (the spec's "re-key sidecar").
+    const pos = savedLayout?.positions[scene];
+    if (savedLayout && pos) {
+      savedLayout.positions[id] = pos;
+      delete savedLayout.positions[scene];
+      if (project.folderPath) await writeLayout(project.folderPath, JSON.stringify(savedLayout));
+    }
+    await refreshAfterCrud();
+  } else stageMsg.textContent = "Rename failed.";
 }
 
 async function duplicateSceneFlow(scene: string): Promise<void> {
@@ -579,8 +588,15 @@ async function duplicateSceneFlow(scene: string): Promise<void> {
 
 async function deleteSceneFlow(scene: string): Promise<void> {
   if (!(await confirmDialog(`Delete '${scene}'? This removes the file.`))) return;
-  if (await project.deleteScene(scene)) await refreshAfterCrud();
-  else stageMsg.textContent = "Delete failed.";
+  if (await project.deleteScene(scene)) {
+    // Drop the deleted scene's saved position so it doesn't linger in the sidecar
+    // (the spec's "drop from sidecar").
+    if (savedLayout && savedLayout.positions[scene]) {
+      delete savedLayout.positions[scene];
+      if (project.folderPath) await writeLayout(project.folderPath, JSON.stringify(savedLayout));
+    }
+    await refreshAfterCrud();
+  } else stageMsg.textContent = "Delete failed.";
 }
 
 /** Clear the sidecar back to a pure auto-layout, snapshot it, persist, and redraw. */
