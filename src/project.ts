@@ -143,4 +143,44 @@ export class Project {
     if (this.activeSceneId === sceneId) this.activeSceneId = null;
     return true;
   }
+
+  /** Whether a loaded scene doc has no `scene` field (a legacy/global file). Its
+   *  sequence ids are bare, so a chain FROM it references the bare id. */
+  private isSceneLess(sceneId: string): boolean {
+    const doc = this.docs.get(sceneId);
+    if (!doc) return false;
+    try {
+      return !(JSON.parse(doc.toJson()) as { scene?: string }).scene;
+    } catch {
+      return false;
+    }
+  }
+
+  /** Author a cross-scene chain: make `toScene`'s `toSeq` start after `fromScene`'s
+   *  `fromSeq`, by writing `toSeq`'s trigger. Writes a FULLY-QUALIFIED source id
+   *  (`fromScene:fromSeq`) unless the source is scene-less (then the bare `fromSeq`).
+   *  Refuses a self-chain. Returns false (no throw) on a missing target sequence or a
+   *  failed save; the file is unchanged on failure. */
+  async chainScenes(
+    fromScene: string,
+    fromSeq: string,
+    toScene: string,
+    toSeq: string,
+  ): Promise<boolean> {
+    if (fromScene === toScene) return false; // within-scene chains belong in the editor
+    const doc = this.docs.get(toScene);
+    if (!doc) return false;
+    if (!doc.sequence(toSeq)) return false; // target sequence must exist
+    const sourceId = this.isSceneLess(fromScene) ? fromSeq : `${fromScene}:${fromSeq}`;
+    doc.edit((d) => {
+      const seq = d.sequence?.find((s) => s.id === toSeq);
+      if (seq) seq.trigger = { kind: "on_sequence_finished", id: sourceId };
+    });
+    const path = doc.path ?? this.pathFor(toScene);
+    const r = await saveScene(path, doc.toJson());
+    if (!r.ok) return false;
+    // Re-bind the doc at its path (mirrors the CRUD methods) so later ops see the save.
+    this.docs.set(toScene, SceneDoc.fromJson(doc.toJson(), path));
+    return true;
+  }
 }

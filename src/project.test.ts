@@ -68,3 +68,60 @@ describe("Project CRUD", () => {
     expect(p.sceneIds()).toContain(newId!);
   });
 });
+
+describe("Project chainScenes", () => {
+  function seeded(): Project {
+    const p = Project.empty();
+    p.folderPath = "/proj";
+    // A: two sequences; B: one sequence with an existing non-chain trigger.
+    p.addDoc(
+      "vale",
+      SceneDoc.fromJson(
+        JSON.stringify({ scene: "vale", sequence: [{ id: "intro" }, { id: "outro" }] }),
+        "/proj/vale.toml",
+      ),
+    );
+    p.addDoc(
+      "dawn",
+      SceneDoc.fromJson(
+        JSON.stringify({
+          scene: "dawn",
+          sequence: [{ id: "arrive", trigger: { kind: "after_seconds", seconds: 3 } }],
+        }),
+        "/proj/dawn.toml",
+      ),
+    );
+    return p;
+  }
+
+  it("writes the target sequence's on_sequence_finished trigger with a qualified source id", async () => {
+    const p = seeded();
+    expect(await p.chainScenes("vale", "outro", "dawn", "arrive")).toBe(true);
+    const dawn = JSON.parse(p.doc("dawn")!.toJson());
+    const arrive = dawn.sequence.find((s: { id: string }) => s.id === "arrive");
+    expect(arrive.trigger).toEqual({ kind: "on_sequence_finished", id: "vale:outro" });
+  });
+
+  it("writes a bare source id when the source scene is scene-less", async () => {
+    const p = seeded();
+    // A scene-less source: no `scene` field → its only id is bare.
+    p.addDoc(
+      "legacy",
+      SceneDoc.fromJson(JSON.stringify({ sequence: [{ id: "start" }] }), "/proj/legacy.toml"),
+    );
+    expect(await p.chainScenes("legacy", "start", "dawn", "arrive")).toBe(true);
+    const dawn = JSON.parse(p.doc("dawn")!.toJson());
+    const arrive = dawn.sequence.find((s: { id: string }) => s.id === "arrive");
+    expect(arrive.trigger).toEqual({ kind: "on_sequence_finished", id: "start" });
+  });
+
+  it("returns false when the target sequence does not exist", async () => {
+    const p = seeded();
+    expect(await p.chainScenes("vale", "outro", "dawn", "ghost")).toBe(false);
+  });
+
+  it("refuses a self-chain (same scene)", async () => {
+    const p = seeded();
+    expect(await p.chainScenes("vale", "intro", "vale", "outro")).toBe(false);
+  });
+});
