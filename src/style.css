@@ -210,6 +210,22 @@ button:disabled:hover {
   cursor: grabbing;
 }
 
+/* ── chain-draw dialog bits (chain_dialog.ts) — the rim handle + rubber-band
+   themselves are canvas-drawn (story.ts), only the pairing preview/warning need
+   styling here. ── */
+
+.chain-preview {
+  color: var(--gold);
+  font-size: 13px;
+  margin: 6px 0;
+}
+
+.chain-warn {
+  color: var(--warn, #c0564e);
+  font-size: 12.5px;
+  margin: 4px 0 2px;
+}
+
 /* ── right-click context menu (menu.ts) ── */
 /* One instance at a time, fixed + viewport-clamped by menu.ts; card menus (Open/
    Rename/Duplicate/Delete) and the canvas menu (New scene/Auto-arrange/Fit) share

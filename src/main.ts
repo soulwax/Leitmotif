@@ -20,12 +20,13 @@ import {
 import { SceneDoc, type Beat, type ChoreographyScene, type Sequence } from "./scene";
 import { Project } from "./project";
 import { buildBeatForm } from "./form";
-import { buildTriggerForm, type Trigger } from "./trigger";
+import { buildTriggerForm, triggerKindLabel, type Trigger } from "./trigger";
 import { buildDialogShell } from "./dialog";
+import { openChainDialog } from "./chain_dialog";
 import { renderTimeline } from "./timeline";
 import { drawStage, nearestActor, screenToWorld } from "./stage";
 import { type PreviewFrame, duration, fetchTimeline, frameAt } from "./preview";
-import { renderStoryCanvas, layoutGraph, nodeAt, type StoryLayout } from "./story";
+import { renderStoryCanvas, layoutGraph, nodeAt, handleAt, type StoryLayout } from "./story";
 import { mergeLayout, parseSavedLayout, type SavedLayout } from "./layout_store";
 import { openContextMenu, type MenuItem } from "./menu";
 import { loadAssets, actorIds, sfxIds } from "./assets";
@@ -88,6 +89,9 @@ let savedLayout: SavedLayout | null = null;
  *  (so the node doesn't jump to the cursor), and whether it has moved past the
  *  click-vs-drag threshold. */
 let drag: { scene: string; dx: number; dy: number; moved: boolean } | null = null;
+/** In-progress chain-draw: the source scene (dragged from its rim handle) and the current
+ *  cursor point (canvas coords) for the rubber-band line. Null when not chaining. */
+let chaining: { fromScene: string; cursor: { x: number; y: number } } | null = null;
 let selectedSeq: string | null = null;
 /** The beat currently open in the inspector, as [stepIndex, beatIndex]. */
 let selectedBeat: [number, number] | null = null;
@@ -526,6 +530,30 @@ async function persistLayout(): Promise<void> {
 async function refreshAfterCrud(): Promise<void> {
   if (project.folderPath) project.graph = await sceneGraph(project.folderPath);
   renderStory();
+}
+
+/** Resolve a rim-handle chain-drag: gather both scenes' sequences, open the pairing
+ *  dialog, then write the chain via `Project.chainScenes` and re-fetch the graph so the
+ *  new edge appears (never a speculative TS-drawn edge). Every failure degrades to a
+ *  stageMsg notice — never throws. */
+async function chainFlow(fromScene: string, toScene: string): Promise<void> {
+  const fromSeqs = (project.doc(fromScene)?.sequences() ?? []).map((s) => s.id);
+  const toDoc = project.doc(toScene);
+  const toSeqs = toDoc?.sequences() ?? [];
+  if (fromSeqs.length === 0 || toSeqs.length === 0) {
+    stageMsg.textContent = "Both scenes need at least one sequence to chain.";
+    return;
+  }
+  const result = await openChainDialog(fromScene, fromSeqs, toScene, toSeqs, (toSeqId) => {
+    const trig = toSeqs.find((s) => s.id === toSeqId)?.trigger;
+    return trig && trig.kind !== "on_sequence_finished" ? triggerKindLabel(trig.kind) : null;
+  });
+  if (!result) return; // cancelled
+  if (await project.chainScenes(fromScene, result.fromSeq, toScene, result.toSeq)) {
+    await refreshAfterCrud();
+  } else {
+    stageMsg.textContent = "Couldn't write the chain.";
+  }
 }
 
 /** Ids restricted to a filesystem-safe set: letters, digits, `-`, `_`. Rejects
@@ -1136,12 +1164,32 @@ btnStoryToggle.addEventListener("click", toggleStoryMode);
 btnStoryFit.addEventListener("click", fitStoryView);
 storyCanvas.addEventListener("mousedown", (e) => {
   if (e.button !== 0 || !storyLayout) return;
+  const handleScene = handleAt(storyLayout, e.offsetX, e.offsetY);
+  if (handleScene) {
+    chaining = { fromScene: handleScene, cursor: { x: e.offsetX, y: e.offsetY } };
+    return; // a handle-press draws a chain, not a node-move
+  }
   const scene = nodeAt(storyLayout, e.offsetX, e.offsetY);
   if (!scene) return;
   const p = storyLayout.pos.get(scene)!;
   drag = { scene, dx: e.offsetX - p.x, dy: e.offsetY - p.y, moved: false };
 });
 storyCanvas.addEventListener("mousemove", (e) => {
+  if (chaining && storyLayout) {
+    chaining.cursor = { x: e.offsetX, y: e.offsetY };
+    const from = storyLayout.pos.get(chaining.fromScene);
+    const NODE_W = 168,
+      NODE_H = 92; // rim-handle origin (matches story.ts)
+    const hovered = nodeAt(storyLayout, e.offsetX, e.offsetY);
+    hoveredScene = hovered && hovered !== chaining.fromScene ? hovered : hoveredScene;
+    if (from) {
+      renderStoryCanvas(storyCanvas, project.graph, hoveredScene, storyLayout, {
+        from: { x: from.x + NODE_W, y: from.y + NODE_H / 2 },
+        to: chaining.cursor,
+      });
+    }
+    return;
+  }
   if (drag && storyLayout) {
     const nx = e.offsetX - drag.dx;
     const ny = e.offsetY - drag.dy;
@@ -1160,7 +1208,20 @@ storyCanvas.addEventListener("mousemove", (e) => {
     if (storyLayout) renderStoryCanvas(storyCanvas, project.graph, hoveredScene, storyLayout);
   }
 });
-storyCanvas.addEventListener("mouseup", () => {
+storyCanvas.addEventListener("mouseup", (e) => {
+  if (chaining && storyLayout) {
+    const src = chaining.fromScene;
+    chaining = null;
+    renderStory(); // clear the rubber-band
+    const target = nodeAt(storyLayout, e.offsetX, e.offsetY);
+    if (!target) return; // dropped on empty canvas → cancel silently
+    if (target === src) {
+      stageMsg.textContent = "To chain sequences within a scene, open it in the editor.";
+      return;
+    }
+    void chainFlow(src, target);
+    return;
+  }
   if (!drag) return;
   const d = drag;
   drag = null;
