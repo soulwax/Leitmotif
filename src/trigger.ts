@@ -30,6 +30,13 @@ const TRIGGER_LABELS: Record<string, { label: string; hint: string }> = {
   on_sequence_finished: { label: "After another sequence", hint: "Chains: fires when that sequence finishes." },
 };
 
+/** Plain-language label for a trigger kind (reuses the same vocab as the trigger
+ *  editor). Falls back to the raw kind for an unknown one. Used by the chain dialog's
+ *  overwrite warning so its copy matches the editor's. */
+export function triggerKindLabel(kind: string): string {
+  return TRIGGER_LABELS[kind]?.label ?? kind;
+}
+
 /** Field-specific input hints (labels + kind → suggestions handled by caller). */
 const FIELD_LABEL: Record<string, string> = {
   seconds: "Seconds",

@@ -21,6 +21,7 @@ import { SceneDoc, type Beat, type ChoreographyScene, type Sequence } from "./sc
 import { Project } from "./project";
 import { buildBeatForm } from "./form";
 import { buildTriggerForm, type Trigger } from "./trigger";
+import { buildDialogShell } from "./dialog";
 import { renderTimeline } from "./timeline";
 import { drawStage, nearestActor, screenToWorld } from "./stage";
 import { type PreviewFrame, duration, fetchTimeline, frameAt } from "./preview";
@@ -694,43 +695,6 @@ function confirmDialog(message: string): Promise<boolean> {
   });
 }
 
-/** Shared overlay + panel + title scaffold for `promptText`/`confirmDialog`.
- * `close(value)` removes the overlay, tears down listeners, and settles the
- * caller's promise exactly once. Escape and a backdrop click both close with
- * `null` (cancel). */
-function buildDialogShell<T>(
-  title: string,
-  settle: (value: T | null) => void,
-): { backdrop: HTMLElement; box: HTMLElement; close: (value: T | null) => void } {
-  const backdrop = document.createElement("div");
-  backdrop.className = "lm-dialog-backdrop";
-  const box = document.createElement("div");
-  box.className = "lm-dialog";
-  backdrop.appendChild(box);
-
-  const head = document.createElement("div");
-  head.className = "lm-dialog-title";
-  head.textContent = title;
-  box.appendChild(head);
-
-  let settled = false;
-  function close(value: T | null): void {
-    if (settled) return;
-    settled = true;
-    document.removeEventListener("keydown", onEscape);
-    backdrop.remove();
-    settle(value);
-  }
-  function onEscape(e: KeyboardEvent): void {
-    if (e.key === "Escape") close(null);
-  }
-  document.addEventListener("keydown", onEscape);
-  backdrop.addEventListener("mousedown", (e) => {
-    if (e.target === backdrop) close(null);
-  });
-
-  return { backdrop, box, close };
-}
 
 function setValidation(text: string, isError = false): void {
   validationOut.textContent = text;
