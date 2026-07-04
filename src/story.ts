@@ -9,6 +9,7 @@ const NODE_H = 92;
 const COL_GAP = 96;
 const ROW_GAP = 40;
 const MARGIN = 48;
+const HANDLE_R = 7; // rim edge-handle radius (a small draggable connection port)
 
 export interface StoryLayout {
   pos: Map<string, { x: number; y: number }>; // scene -> top-left
@@ -73,6 +74,17 @@ export function nodeAt(layout: StoryLayout, x: number, y: number): string | null
   return null;
 }
 
+/** The scene whose rim edge-handle (right-middle edge) contains (x,y), or null.
+ *  Checked BEFORE nodeAt so a handle-press starts a chain-draw, not a node-move. */
+export function handleAt(layout: StoryLayout, x: number, y: number): string | null {
+  for (const [scene, p] of layout.pos) {
+    const cx = p.x + NODE_W;
+    const cy = p.y + NODE_H / 2;
+    if ((x - cx) ** 2 + (y - cy) ** 2 <= (HANDLE_R + 3) ** 2) return scene; // +3 slop for easy grabbing
+  }
+  return null;
+}
+
 function drawNode(
   ctx: CanvasRenderingContext2D,
   node: StoryNode,
@@ -115,6 +127,18 @@ function drawNode(
   ctx.restore();
 }
 
+function drawHandle(ctx: CanvasRenderingContext2D, p: { x: number; y: number }): void {
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(p.x + NODE_W, p.y + NODE_H / 2, HANDLE_R, 0, Math.PI * 2);
+  ctx.fillStyle = "#d9a441"; // gold — matches resolved-edge color; "pull a connection here"
+  ctx.fill();
+  ctx.strokeStyle = "#1a1712";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+}
+
 function drawEdge(
   ctx: CanvasRenderingContext2D,
   from: { x: number; y: number },
@@ -149,12 +173,16 @@ function drawEdge(
  *  layout so the caller can hit-test with the same positions. When `presetLayout` is
  *  passed (e.g. the sidecar-merged or in-progress-drag layout), it is drawn instead of
  *  recomputing one — so the drawn layout and the caller's hit-test layout stay the
- *  same object (2B-1 callers that omit it are unaffected). */
+ *  same object (2B-1 callers that omit it are unaffected). The hovered node also shows
+ *  a gold rim edge-handle; an optional `rubberBand` draws the in-progress chain-draw
+ *  line from the grabbed handle to the current pointer position (existing 4-arg
+ *  callers are unaffected — it's the 5th optional param). */
 export function renderStoryCanvas(
   canvas: HTMLCanvasElement,
   graph: StoryGraph,
   hoveredScene: string | null,
   presetLayout?: StoryLayout,
+  rubberBand?: { from: { x: number; y: number }; to: { x: number; y: number } }, // in-progress chain-draw
 ): StoryLayout {
   const layout = presetLayout ?? layoutGraph(graph);
   const ctx = canvas.getContext("2d");
@@ -171,6 +199,24 @@ export function renderStoryCanvas(
   for (const node of graph.nodes) {
     const p = layout.pos.get(node.scene);
     if (p) drawNode(ctx, node, p, node.scene === hoveredScene);
+  }
+  if (hoveredScene) {
+    const hp = layout.pos.get(hoveredScene);
+    if (hp) drawHandle(ctx, hp);
+  }
+  if (rubberBand) {
+    const ctx2 = canvas.getContext("2d");
+    if (ctx2) {
+      ctx2.save();
+      ctx2.strokeStyle = "#d9a441";
+      ctx2.lineWidth = 2;
+      ctx2.setLineDash([5, 4]);
+      ctx2.beginPath();
+      ctx2.moveTo(rubberBand.from.x, rubberBand.from.y);
+      ctx2.lineTo(rubberBand.to.x, rubberBand.to.y);
+      ctx2.stroke();
+      ctx2.restore();
+    }
   }
   return layout;
 }

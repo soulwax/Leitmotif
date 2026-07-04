@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { layoutGraph, nodeAt } from "./story";
+import { layoutGraph, nodeAt, handleAt } from "./story";
+import type { StoryLayout } from "./story";
 import type { StoryGraph, StoryNode, StoryEdge } from "./graph";
 
 // Layout constants mirrored from story.ts (kept in sync with the module).
@@ -83,5 +84,30 @@ describe("nodeAt", () => {
     expect(nodeAt(layout, p.x - 10, p.y + NODE_H / 2)).toBeNull();
     // a point below the card
     expect(nodeAt(layout, p.x + NODE_W / 2, p.y + NODE_H + 10)).toBeNull();
+  });
+});
+
+describe("handleAt", () => {
+  // The rim handle is a small circle centered on the node's right-middle edge.
+  const NODE_W = 168;
+  const NODE_H = 92;
+  function layoutWith(scene: string, x: number, y: number): StoryLayout {
+    return { pos: new Map([[scene, { x, y }]]), width: 400, height: 200 };
+  }
+
+  it("returns the scene when the point is on its rim handle (right-middle edge)", () => {
+    const layout = layoutWith("a", 40, 40);
+    // handle center ≈ (x + NODE_W, y + NODE_H/2)
+    expect(handleAt(layout, 40 + NODE_W, 40 + NODE_H / 2)).toBe("a");
+  });
+
+  it("returns null for a point on the node body (so body-drag still moves it)", () => {
+    const layout = layoutWith("a", 40, 40);
+    expect(handleAt(layout, 40 + NODE_W / 2, 40 + NODE_H / 2)).toBeNull();
+  });
+
+  it("returns null for a point well outside any node", () => {
+    const layout = layoutWith("a", 40, 40);
+    expect(handleAt(layout, 1000, 1000)).toBeNull();
   });
 });
