@@ -26,13 +26,14 @@ import { openChainDialog } from "./chain_dialog";
 import { renderTimeline } from "./timeline";
 import { drawStage, nearestActor, screenToWorld } from "./stage";
 import { type PreviewFrame, duration, fetchTimeline, frameAt } from "./preview";
-import { renderStoryCanvas, layoutGraph, nodeAt, handleAt, type StoryLayout } from "./story";
+import { renderStoryCanvas, layoutGraph, nodeAt, handleAt, ghostBadgeAt, type StoryLayout } from "./story";
 import { mergeLayout, parseSavedLayout, type SavedLayout } from "./layout_store";
 import { openContextMenu, type MenuItem } from "./menu";
 import { loadAssets, actorIds, sfxIds } from "./assets";
 import { verbTakesWorldPoint } from "./vocab";
 import { suggestions, type Finding, type SuggestContext, type Suggestion } from "./suggest";
 import "./rules"; // registers the Tier-1 RuleProvider with the suggestion engine
+import { storySuggestions, type StorySuggestion } from "./story_suggest";
 import { installKeys, helpBinding, type KeyBinding } from "./keys";
 
 function $(id: string): HTMLElement {
@@ -80,6 +81,9 @@ let doc: SceneDoc = SceneDoc.empty();
 let project: Project = Project.empty();
 let mode: "story" | "scene" = "scene";
 let storyLayout: StoryLayout | null = null;
+/** Ghost chain suggestions for the current graph, recomputed on every renderStory.
+ *  A transient overlay — never persisted, never part of project.graph. */
+let storyGhosts: StorySuggestion[] = [];
 let hoveredScene: string | null = null;
 /** The layout sidecar loaded for the current project folder (null = none/unopened).
  *  Merged over the auto-layout in `renderStory`; mutated + rewritten as the user
@@ -473,7 +477,8 @@ function renderStory(): void {
   // hit-test layout used by drag/hover/contextmenu are always the same instance.
   storyLayout = mergeLayout(layoutGraph(project.graph), savedLayout);
   fitStoryCanvas();
-  renderStoryCanvas(storyCanvas, project.graph, hoveredScene, storyLayout);
+  storyGhosts = storySuggestions({ graph: project.graph, sceneIds: project.sceneIds() });
+  renderStoryCanvas(storyCanvas, project.graph, hoveredScene, storyLayout, undefined, storyGhosts);
 }
 
 /** Open a project folder: derive it from the existing file-open dialog (no new
@@ -551,6 +556,31 @@ async function chainFlow(fromScene: string, toScene: string): Promise<void> {
   if (!result) return; // cancelled
   if (await project.chainScenes(fromScene, result.fromSeq, toScene, result.toSeq)) {
     await refreshAfterCrud();
+  } else {
+    stageMsg.textContent = "Couldn't write the chain.";
+  }
+}
+
+/** Accept a ghost chain suggestion (a badge click): mirrors `chainFlow`, but the
+ *  endpoints are pre-chosen by the ghost rather than a rim-handle drag. The pairing
+ *  dialog's own default (source=last, target=entry) already matches the ghost's
+ *  proposed fromSeq/toSeq, so no preferred pair needs to be threaded through —
+ *  chain_dialog.ts stays untouched. */
+async function acceptGhost(ghost: StorySuggestion): Promise<void> {
+  const fromSeqs = (project.doc(ghost.fromScene)?.sequences() ?? []).map((s) => s.id);
+  const toDoc = project.doc(ghost.toScene);
+  const toSeqs = toDoc?.sequences() ?? [];
+  if (fromSeqs.length === 0 || toSeqs.length === 0) {
+    stageMsg.textContent = "Both scenes need at least one sequence to chain.";
+    return;
+  }
+  const result = await openChainDialog(ghost.fromScene, fromSeqs, ghost.toScene, toSeqs, (toSeqId) => {
+    const trig = toSeqs.find((s) => s.id === toSeqId)?.trigger;
+    return trig && trig.kind !== "on_sequence_finished" ? triggerKindLabel(trig.kind) : null;
+  });
+  if (!result) return; // cancelled — the ghost remains
+  if (await project.chainScenes(ghost.fromScene, result.fromSeq, ghost.toScene, result.toSeq)) {
+    await refreshAfterCrud(); // recomputes ghosts (this one vanishes) + draws the gold edge
   } else {
     stageMsg.textContent = "Couldn't write the chain.";
   }
@@ -1164,6 +1194,11 @@ btnStoryToggle.addEventListener("click", toggleStoryMode);
 btnStoryFit.addEventListener("click", fitStoryView);
 storyCanvas.addEventListener("mousedown", (e) => {
   if (e.button !== 0 || !storyLayout) return;
+  const ghost = ghostBadgeAt(storyLayout, storyGhosts, e.offsetX, e.offsetY);
+  if (ghost) {
+    void acceptGhost(ghost);
+    return; // a badge click accepts the suggestion — not a node-move or chain-draw
+  }
   const handleScene = handleAt(storyLayout, e.offsetX, e.offsetY);
   if (handleScene) {
     chaining = { fromScene: handleScene, cursor: { x: e.offsetX, y: e.offsetY } };
@@ -1200,13 +1235,15 @@ storyCanvas.addEventListener("mousemove", (e) => {
     renderStoryCanvas(storyCanvas, project.graph, hoveredScene, storyLayout);
     return;
   }
-  // hover (unchanged)
+  // hover (unchanged, plus ghost-badge cursor affordance)
   const scene = storyLayout ? nodeAt(storyLayout, e.offsetX, e.offsetY) : null;
   if (scene !== hoveredScene) {
     hoveredScene = scene;
     storyCanvas.style.cursor = scene ? "pointer" : "default";
     if (storyLayout) renderStoryCanvas(storyCanvas, project.graph, hoveredScene, storyLayout);
   }
+  const overBadge = storyLayout ? ghostBadgeAt(storyLayout, storyGhosts, e.offsetX, e.offsetY) : null;
+  storyCanvas.style.cursor = overBadge ? "pointer" : scene ? "pointer" : "default";
 });
 storyCanvas.addEventListener("mouseup", (e) => {
   if (chaining && storyLayout) {
