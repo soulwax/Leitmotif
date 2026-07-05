@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { layoutGraph, nodeAt, handleAt } from "./story";
+import { layoutGraph, nodeAt, handleAt, ghostBadgeAt } from "./story";
 import type { StoryLayout } from "./story";
 import type { StoryGraph, StoryNode, StoryEdge } from "./graph";
+import type { StorySuggestion } from "./story_suggest";
 
 // Layout constants mirrored from story.ts (kept in sync with the module).
 const NODE_W = 168;
@@ -109,5 +110,36 @@ describe("handleAt", () => {
   it("returns null for a point well outside any node", () => {
     const layout = layoutWith("a", 40, 40);
     expect(handleAt(layout, 1000, 1000)).toBeNull();
+  });
+});
+
+describe("ghostBadgeAt", () => {
+  const NODE_W = 168;
+  const NODE_H = 92;
+  function ghost(from: string, to: string): StorySuggestion {
+    return { id: `ghost:chain:${from}->${to}`, label: "", confidence: 1,
+      fromScene: from, fromSeq: "x", toScene: to, toSeq: "y" };
+  }
+  // Two nodes: 'a' at (0,0), 'b' at (400,0). The ghost edge runs from a's rim
+  // (a.x+NODE_W, a.y+NODE_H/2) to b's left-middle (b.x, b.y+NODE_H/2); the badge sits at
+  // the midpoint of that segment.
+  const layout: StoryLayout = {
+    pos: new Map([["a", { x: 0, y: 0 }], ["b", { x: 400, y: 0 }]]),
+    width: 600, height: 200,
+  };
+  const ghosts = [ghost("a", "b")];
+
+  it("returns the ghost when the point is on its midpoint badge", () => {
+    const midX = (0 + NODE_W + 400) / 2; // (a.rim.x + b.left.x) / 2
+    const midY = NODE_H / 2;
+    expect(ghostBadgeAt(layout, ghosts, midX, midY)?.id).toBe("ghost:chain:a->b");
+  });
+
+  it("returns null for a point away from any badge", () => {
+    expect(ghostBadgeAt(layout, ghosts, 5, 5)).toBeNull();
+  });
+
+  it("returns null when there are no ghosts", () => {
+    expect(ghostBadgeAt(layout, [], 200, NODE_H / 2)).toBeNull();
   });
 });

@@ -3,6 +3,7 @@
 // physics, no drag (2B-2). Uses the editor's dark/foggy tone for visual consistency.
 
 import type { StoryGraph, StoryNode } from "./graph";
+import type { StorySuggestion } from "./story_suggest";
 
 const NODE_W = 168;
 const NODE_H = 92;
@@ -10,6 +11,7 @@ const COL_GAP = 96;
 const ROW_GAP = 40;
 const MARGIN = 48;
 const HANDLE_R = 7; // rim edge-handle radius (a small draggable connection port)
+const GHOST_BADGE_R = 9; // the clickable "+" badge radius at a ghost edge's midpoint
 
 export interface StoryLayout {
   pos: Map<string, { x: number; y: number }>; // scene -> top-left
@@ -83,6 +85,65 @@ export function handleAt(layout: StoryLayout, x: number, y: number): string | nu
     if ((x - cx) ** 2 + (y - cy) ** 2 <= (HANDLE_R + 3) ** 2) return scene; // +3 slop for easy grabbing
   }
   return null;
+}
+
+/** The two endpoints of a ghost edge in canvas coords: source rim → target left edge. */
+function ghostEndpoints(
+  layout: StoryLayout,
+  g: StorySuggestion,
+): { from: { x: number; y: number }; to: { x: number; y: number }; mid: { x: number; y: number } } | null {
+  const from = layout.pos.get(g.fromScene);
+  const to = layout.pos.get(g.toScene);
+  if (!from || !to) return null;
+  const p1 = { x: from.x + NODE_W, y: from.y + NODE_H / 2 };
+  const p2 = { x: to.x, y: to.y + NODE_H / 2 };
+  return { from: p1, to: p2, mid: { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 } };
+}
+
+/** The ghost whose midpoint "+" badge contains (x,y), or null. Checked BEFORE nodeAt/
+ *  handleAt so a badge click accepts the suggestion instead of moving/chaining a node. */
+export function ghostBadgeAt(
+  layout: StoryLayout,
+  ghosts: StorySuggestion[],
+  x: number,
+  y: number,
+): StorySuggestion | null {
+  for (const g of ghosts) {
+    const ep = ghostEndpoints(layout, g);
+    if (!ep) continue;
+    if ((x - ep.mid.x) ** 2 + (y - ep.mid.y) ** 2 <= (GHOST_BADGE_R + 3) ** 2) return g;
+  }
+  return null;
+}
+
+function drawGhost(
+  ctx: CanvasRenderingContext2D,
+  ep: { from: { x: number; y: number }; to: { x: number; y: number }; mid: { x: number; y: number } },
+): void {
+  ctx.save();
+  // A THIRD register: muted teal-grey, thin, translucent — "a suggestion, not a fact".
+  ctx.strokeStyle = "rgba(127, 214, 194, 0.35)";
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 5]);
+  ctx.beginPath();
+  ctx.moveTo(ep.from.x, ep.from.y);
+  ctx.lineTo(ep.to.x, ep.to.y);
+  ctx.stroke();
+  // the "+" badge at the midpoint
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.arc(ep.mid.x, ep.mid.y, GHOST_BADGE_R, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(20, 23, 18, 0.85)";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(127, 214, 194, 0.8)";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.fillStyle = "rgba(127, 214, 194, 0.95)";
+  ctx.font = "13px system-ui, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("+", ep.mid.x, ep.mid.y + 0.5);
+  ctx.restore();
 }
 
 function drawNode(
@@ -176,13 +237,16 @@ function drawEdge(
  *  same object (2B-1 callers that omit it are unaffected). The hovered node also shows
  *  a gold rim edge-handle; an optional `rubberBand` draws the in-progress chain-draw
  *  line from the grabbed handle to the current pointer position (existing 4-arg
- *  callers are unaffected — it's the 5th optional param). */
+ *  callers are unaffected — it's the 5th optional param). An optional `ghosts` array
+ *  draws faint proposed chains over the real graph (existing 4/5-arg callers are
+ *  unaffected — it's the 6th optional param). */
 export function renderStoryCanvas(
   canvas: HTMLCanvasElement,
   graph: StoryGraph,
   hoveredScene: string | null,
   presetLayout?: StoryLayout,
   rubberBand?: { from: { x: number; y: number }; to: { x: number; y: number } }, // in-progress chain-draw
+  ghosts?: StorySuggestion[], // faint proposed chains, drawn over the real graph
 ): StoryLayout {
   const layout = presetLayout ?? layoutGraph(graph);
   const ctx = canvas.getContext("2d");
@@ -216,6 +280,15 @@ export function renderStoryCanvas(
       ctx2.lineTo(rubberBand.to.x, rubberBand.to.y);
       ctx2.stroke();
       ctx2.restore();
+    }
+  }
+  if (ghosts && ghosts.length) {
+    const ctx3 = canvas.getContext("2d");
+    if (ctx3) {
+      for (const g of ghosts) {
+        const ep = ghostEndpoints(layout, g);
+        if (ep) drawGhost(ctx3, ep);
+      }
     }
   }
   return layout;
