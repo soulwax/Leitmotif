@@ -42,8 +42,9 @@ describe("dangling-end -> root ghost rule", () => {
   });
 
   it("caps at 3 ghosts and ranks by confidence then id", () => {
-    // 3 isolated nodes: each is both a dead-end AND a root (no edges at all).
-    // deadEnds=3, roots=3 → 3*3=9 candidate (D!==R) pairs, capped to 3.
+    // 4 isolated nodes (a,b,c,d), no edges: each is both a dead-end AND a root.
+    // deadEnds=4, roots=4 → 16 pairs, minus 4 self-pairs (D!==R) = 12 candidates,
+    // capped to 3. (Same confidence for all, so the cap keeps the 3 lowest ids.)
     const graph: StoryGraph = {
       nodes: [node("a", ["s"]), node("b", ["s"]), node("c", ["s"]), node("d", ["s"])],
       edges: [],
