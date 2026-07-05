@@ -55,10 +55,8 @@ fn run_choreo(args: &[&str]) -> Result<String, String> {
 fn choreo_validate(path: String) -> Result<String, String> {
     // validate prints its report to stderr and exits non-zero on errors; treat a
     // clean run as success and a findings run as an error the UI can display.
-    match run_choreo(&["validate", &path]) {
-        Ok(report) => Ok(report),
-        Err(report) => Err(report),
-    }
+    // run_choreo already returns exactly that Ok/Err split.
+    run_choreo(&["validate", &path])
 }
 
 #[tauri::command]
